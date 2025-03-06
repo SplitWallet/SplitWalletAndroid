@@ -12,39 +12,41 @@ import androidx.lifecycle.ViewModelProvider;
 
 import com.example.splitwallet.MainActivity;
 import com.example.splitwallet.R;
-import com.example.splitwallet.viewmodels.LoginViewModel;
+import com.example.splitwallet.viewmodels.RegisterViewModel;
 
-public class LoginActivity extends AppCompatActivity {
-    private LoginViewModel viewModel;
+public class RegisterActivity extends AppCompatActivity {
+    private RegisterViewModel viewModel;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
         // Проверка авторизации
-        if (isUserLoggedIn()) {
+        if (isUserRegistered()) {
             startActivity(new Intent(this, MainActivity.class));
             finish(); // Закрыть LoginActivity
             return;
         }
 
-        setContentView(R.layout.activity_login);
+        setContentView(R.layout.activity_register);
 
-        viewModel = new ViewModelProvider(this).get(LoginViewModel.class);
+        viewModel = new ViewModelProvider(this).get(RegisterViewModel.class);
 
         EditText etLogin = findViewById(R.id.etLogin);
+        EditText etEmail = findViewById(R.id.etEmail);
         EditText etPassword = findViewById(R.id.etPassword);
-        Button btnLogin = findViewById(R.id.btnLogin);
+        Button btnBack = findViewById(R.id.btnBack);
         Button btnRegister = findViewById(R.id.btnRegister);
 
-        btnLogin.setOnClickListener(v -> {
+        btnRegister.setOnClickListener(v -> {
             String login = etLogin.getText().toString();
+            String email = etEmail.getText().toString();
             String password = etPassword.getText().toString();
-            viewModel.login(login, password);
+            viewModel.register(login, email, password);
         });
 
-        btnRegister.setOnClickListener(v -> {
-            startActivity(new Intent(this, RegisterActivity.class));
+        btnBack.setOnClickListener(v -> {
+            finish(); // Закрыть RegisterActivity
         });
 
         viewModel.userLiveData.observe(this, user -> {
@@ -59,12 +61,12 @@ public class LoginActivity extends AppCompatActivity {
                 startActivity(new Intent(this, MainActivity.class));
                 finish(); // Закрыть LoginActivity
             } else {
-                Toast.makeText(this, "Login failed", Toast.LENGTH_SHORT).show();
+                Toast.makeText(this, "Register failed", Toast.LENGTH_SHORT).show();
             }
         });
     }
 
-    private boolean isUserLoggedIn() {
+    private boolean isUserRegistered() {
         SharedPreferences sharedPreferences = getSharedPreferences("auth", MODE_PRIVATE);
         String token = sharedPreferences.getString("token", null);
         return token != null; // Если токен есть, пользователь авторизован
