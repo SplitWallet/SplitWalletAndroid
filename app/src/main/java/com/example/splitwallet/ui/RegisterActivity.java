@@ -49,21 +49,23 @@ public class RegisterActivity extends AppCompatActivity {
             finish(); // Закрыть RegisterActivity
         });
 
-        viewModel.userLiveData.observe(this, user -> {
-            if (user != null) {
+        viewModel.userLiveData.observe(this, token -> {
+            if (token != null) {
                 // Сохраняем токен в SharedPreferences
-                /*
-                SharedPreferences sharedPreferences = getSharedPreferences("auth", MODE_PRIVATE);
-                SharedPreferences.Editor editor = sharedPreferences.edit();
-                editor.putString("token", user.getToken()); // Предположим, что токен возвращается с сервера
-                editor.apply();
-                 */
+                saveToken(String.valueOf(token));
                 startActivity(new Intent(this, MainActivity.class));
                 finish(); // Закрыть LoginActivity
             } else {
                 Toast.makeText(this, "Register failed", Toast.LENGTH_SHORT).show();
             }
         });
+    }
+
+    private void saveToken(String token){
+        SharedPreferences sharedPreferences = getSharedPreferences("auth", MODE_PRIVATE);
+        SharedPreferences.Editor editor = sharedPreferences.edit();
+        editor.putString("token", token);
+        editor.apply();
     }
 
     private boolean isUserRegistered() {

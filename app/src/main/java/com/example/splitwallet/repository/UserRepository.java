@@ -10,6 +10,7 @@ import com.example.splitwallet.api.RetrofitClient;
 import com.example.splitwallet.models.LoginRequest;
 import com.example.splitwallet.models.RegisterRequest;
 import com.example.splitwallet.models.User;
+import com.example.splitwallet.models.JWTtoken;
 import com.example.splitwallet.ui.RegisterActivity;
 import com.google.gson.Gson;
 import com.google.gson.JsonObject;
@@ -27,7 +28,7 @@ public class UserRepository {
         apiService = RetrofitClient.getRetrofitInstance().create(ApiService.class);
     }
 
-    public void login(String login, String password, MutableLiveData<User> userLiveData) {
+    public void login(String login, String password, MutableLiveData<JWTtoken> tokenLiveData) {
         Call<Object> call = apiService.login(new LoginRequest(login, password));
         call.enqueue(new Callback<Object>() {
             @Override
@@ -36,21 +37,21 @@ public class UserRepository {
                 Log.d("API_RESPONSE", jsonResponse);
                 if (response.isSuccessful() && response.body() != null) {
                     JsonObject jsonObject = gson.toJsonTree(response.body()).getAsJsonObject();
-                    User user = gson.fromJson(jsonObject, User.class);
-                    userLiveData.setValue(user);
+                    JWTtoken token = gson.fromJson(jsonObject, JWTtoken.class);
+                    tokenLiveData.setValue(token);
                 } else {
-                    userLiveData.setValue(null);
+                    tokenLiveData.setValue(null);
                 }
             }
 
             @Override
             public void onFailure(Call<Object> call, Throwable t) {
-                userLiveData.setValue(null);
+                tokenLiveData.setValue(null);
             }
         });
     }
 
-    public void register(String name, String email, String password, MutableLiveData<User> userLiveData) {
+    public void register(String name, String email, String password, MutableLiveData<JWTtoken> TokenLiveData) {
         Call<Object> call = apiService.register(new RegisterRequest(name, email, password));
         call.enqueue(new Callback<Object>() {
             @Override
@@ -59,16 +60,16 @@ public class UserRepository {
                 Log.d("API_RESPONSE", jsonResponse);
                 if (response.isSuccessful() && response.body() != null) {
                     JsonObject jsonObject = gson.toJsonTree(response.body()).getAsJsonObject();
-                    User user = gson.fromJson(jsonObject, User.class);
-                    userLiveData.setValue(user);
+                    JWTtoken jwt_token = gson.fromJson(jsonObject, JWTtoken.class);
+                    TokenLiveData.setValue(jwt_token);
                 } else {
-                    userLiveData.setValue(null);
+                    TokenLiveData.setValue(null);
                 }
             }
 
             @Override
             public void onFailure(Call<Object> call, Throwable t) {
-                userLiveData.setValue(null);
+                TokenLiveData.setValue(null);
             }
         });
     }
