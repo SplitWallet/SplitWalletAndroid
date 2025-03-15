@@ -49,7 +49,7 @@ public class RegisterActivity extends AppCompatActivity {
             finish(); // Закрыть RegisterActivity
         });
 
-        viewModel.userLiveData.observe(this, token -> {
+        viewModel.getTokenLiveData().observe(this, token -> {
             if (token != null) {
                 // Сохраняем токен в SharedPreferences
                 saveToken(String.valueOf(token));

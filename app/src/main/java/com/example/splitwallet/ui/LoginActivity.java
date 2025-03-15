@@ -43,18 +43,18 @@ public class LoginActivity extends AppCompatActivity {
             viewModel.login(login, password);
         });
 
-        btnRegister.setOnClickListener(v -> {
-            startActivity(new Intent(this, RegisterActivity.class));
-        });
+        btnRegister.setOnClickListener(v ->
+                startActivity(new Intent(this, RegisterActivity.class))
+        );
 
-        viewModel.userLiveData.observe(this, token -> {
+        viewModel.getTokenLiveData().observe(this, token -> {
             if (token != null) {
                 // Сохраняем токен в SharedPreferences
                 saveToken(String.valueOf(token));
                 startActivity(new Intent(this, MainActivity.class));
                 finish(); // Закрыть LoginActivity
             } else {
-                Toast.makeText(this, "Register failed", Toast.LENGTH_SHORT).show();
+                Toast.makeText(this, "Login failed", Toast.LENGTH_SHORT).show();
             }
         });
     }

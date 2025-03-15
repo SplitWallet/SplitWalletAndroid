@@ -1,13 +1,17 @@
 package com.example.splitwallet.models;
 
 public class JWTtoken {
-    private String jwt_token;
+    private String jwtToken;
 
-    public String getJwt_token(){
-        return jwt_token;
+    public JWTtoken(String jwtToken) {
+        this.jwtToken = jwtToken;
     }
 
-    public void setJwt_token(String jwt_token){
-        this.jwt_token = jwt_token;
+    public String getJwtToken(){
+        return jwtToken;
+    }
+
+    public void setJwtToken(String jwtToken){
+        this.jwtToken = jwtToken;
     }
 }
