@@ -111,6 +111,15 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void showCreateGroupDialog() {
+        SharedPreferences sharedPreferences = getSharedPreferences("auth", MODE_PRIVATE);
+        String token = sharedPreferences.getString("token", null);
+        if (token == null) {
+            Toast.makeText(this, "Ошибка: токен не найден. Пожалуйста, войдите снова.", Toast.LENGTH_LONG).show();
+            startActivity(new Intent(this, LoginActivity.class));
+            finish();
+            return;
+        }
+
         AlertDialog.Builder builder = new AlertDialog.Builder(this);
         builder.setTitle("Create Group");
         final EditText input = new EditText(this);
@@ -119,7 +128,7 @@ public class MainActivity extends AppCompatActivity {
         builder.setPositiveButton("Create", (dialog, which) -> {
             String groupName = input.getText().toString();
             if (!groupName.isEmpty()) {
-                groupViewModel.createGroup(groupName);
+                groupViewModel.createGroup(groupName, token);
             } else {
                 Toast.makeText(this, "Group name cannot be empty", Toast.LENGTH_SHORT).show();
             }
