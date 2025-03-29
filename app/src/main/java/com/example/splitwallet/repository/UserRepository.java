@@ -10,9 +10,6 @@ import com.example.splitwallet.models.JWTtoken;
 import com.google.gson.Gson;
 import com.google.gson.JsonObject;
 
-
-import java.util.Objects;
-
 import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
@@ -31,7 +28,7 @@ public class UserRepository {
             public void onResponse(Call<JWTtoken> call, Response<JWTtoken> response) {
                 if (response.isSuccessful() && response.body() != null) {
                     JsonObject jsonObject = gson.toJsonTree(response.body()).getAsJsonObject();
-                    JWTtoken token = new JWTtoken(response.body().getJwtToken());
+                    JWTtoken token = gson.fromJson(jsonObject, JWTtoken.class);
                     tokenLiveData.setValue(token);
                 } else {
                     tokenLiveData.setValue(null);

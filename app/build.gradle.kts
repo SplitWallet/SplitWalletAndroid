@@ -8,7 +8,7 @@ android {
 
     defaultConfig {
         applicationId = "com.example.splitwallet"
-        minSdk = 24
+        minSdk = 28
         targetSdk = 35
         versionCode = 1
         versionName = "1.0"
@@ -49,6 +49,10 @@ dependencies {
     // Retrofit 2
     implementation("com.squareup.retrofit2:retrofit:2.9.0")
     implementation("com.squareup.retrofit2:converter-gson:2.9.0") // Для работы с JSON (Gson)
+
+    // Lombok
+    compileOnly("org.projectlombok:lombok:1.18.36")
+    annotationProcessor ("org.projectlombok:lombok:1.18.36")
 
     // OkHttp
     implementation("com.squareup.okhttp3:okhttp:4.12.0")
