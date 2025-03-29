@@ -1,18 +1,19 @@
 package com.example.splitwallet.models;
 
-import java.util.Date;
+import android.annotation.SuppressLint;
+
+import java.time.LocalDateTime;
 import java.util.List;
 
 public class Group {
     private String name;
-    private String createdAt;
-    private String updatedAt;
+    private LocalDateTime createdAt;
+    private LocalDateTime updatedAt;
     private User userOwner;
     private List<User> members;
     private List<Expense> events;
     private boolean isClosed;
 
-    // Геттеры и сеттеры
     public String getName() {
         return name;
     }
@@ -21,19 +22,21 @@ public class Group {
         this.name = name;
     }
 
-    public String getCreatedAt() {
+    public LocalDateTime getCreatedAt() {
         return createdAt;
     }
 
-    public void setCreatedAt(String createdAt) {
+    @SuppressLint("NewApi")
+    public void setCreatedAt(LocalDateTime createdAt) {
         this.createdAt = createdAt;
     }
 
-    public String getUpdatedAt() {
+    public LocalDateTime getUpdatedAt() {
         return updatedAt;
     }
 
-    public void setUpdatedAt(String updatedAt) {
+    @SuppressLint("NewApi")
+    public void setUpdatedAt(LocalDateTime updatedAt) {
         this.updatedAt = updatedAt;
     }
 
