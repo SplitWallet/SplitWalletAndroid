@@ -30,6 +30,8 @@ import androidx.appcompat.app.AppCompatActivity;
 
 import com.example.splitwallet.databinding.ActivityMainBinding;
 
+import java.util.List;
+
 public class MainActivity extends AppCompatActivity {
 
     private AppBarConfiguration mAppBarConfiguration;
@@ -88,6 +90,23 @@ public class MainActivity extends AppCompatActivity {
                 Toast.makeText(this, "Failed to create group", Toast.LENGTH_SHORT).show();
             }
         });
+
+        SharedPreferences sharedPreferences = getSharedPreferences("auth", MODE_PRIVATE);
+        String token = sharedPreferences.getString("token", null);
+        if (token != null) {
+            loadUserGroups(token);
+        }
+
+        groupViewModel.getUserGroupsLiveData().observe(this, groups -> {
+            if (groups != null) {
+                if (groups.isEmpty()) {
+                    Toast.makeText(this, "You don't have any groups yet", Toast.LENGTH_SHORT).show();
+                }
+                updateGroupsMenu(groups);
+            }else {
+                Toast.makeText(this, "Failed to load groups", Toast.LENGTH_SHORT).show();
+            }
+        });
     }
 
     @Override
@@ -102,6 +121,16 @@ public class MainActivity extends AppCompatActivity {
             return true;
         }
         return super.onOptionsItemSelected(item);
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+        SharedPreferences sharedPreferences = getSharedPreferences("auth", MODE_PRIVATE);
+        String token = sharedPreferences.getString("token", null);
+        if (token != null) {
+            loadUserGroups(token);
+        }
     }
 
     @Override
@@ -136,6 +165,33 @@ public class MainActivity extends AppCompatActivity {
         Toast.makeText(this, "Вы вышли из аккаунта", Toast.LENGTH_SHORT).show();
         finish();
 
+    }
+
+    private void loadUserGroups(String token) {
+        groupViewModel.loadUserGroups(token);
+    }
+
+    private void updateGroupsMenu(List<Group> groups) {
+        NavigationView navigationView = binding.navView;
+        Menu menu = navigationView.getMenu();
+
+        // Очищаем старые группы
+        menu.removeGroup(R.id.nav_group_list);
+
+        // Добавляем новые группы
+        for (Group group : groups) {
+            menu.add(R.id.nav_group_list, Menu.NONE, Menu.NONE, group.getName())
+                    .setIcon(R.drawable.ic_group_icon)
+                    .setOnMenuItemClickListener(item -> {
+                        openGroupDetails(group.getId());
+                        return true;
+                    });
+        }
+    }
+
+    private void openGroupDetails(Long groupId) {
+        // Реализация перехода к деталям группы
+        Toast.makeText(this, "Opening group: " + groupId, Toast.LENGTH_SHORT).show();
     }
 
     private void showCreateGroupDialog() {

@@ -50,7 +50,7 @@ public class LoginActivity extends AppCompatActivity {
         viewModel.getTokenLiveData().observe(this, token -> {
             if (token != null) {
                 // Сохраняем токен в SharedPreferences
-                saveToken(String.valueOf(token.getJwtToken()));
+                saveToken(token.getJwtToken());
                 startActivity(new Intent(this, MainActivity.class));
                 finish(); // Закрыть LoginActivity
             } else {
