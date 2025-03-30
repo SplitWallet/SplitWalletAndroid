@@ -1,5 +1,7 @@
 package com.example.splitwallet.repository;
 
+import android.util.Log;
+
 import androidx.lifecycle.MutableLiveData;
 
 import com.example.splitwallet.api.ApiService;
@@ -31,12 +33,14 @@ public class UserRepository {
                     JWTtoken token = gson.fromJson(jsonObject, JWTtoken.class);
                     tokenLiveData.setValue(token);
                 } else {
+                    Log.e("API_ERROR", "Ошибка: " + response.code() + " - " + response.message());
                     tokenLiveData.setValue(null);
                 }
             }
 
             @Override
             public void onFailure(Call<JWTtoken> call, Throwable t) {
+                Log.e("API_FAILURE", "Ошибка сети: " + t.getMessage());
                 tokenLiveData.setValue(null);
             }
         });

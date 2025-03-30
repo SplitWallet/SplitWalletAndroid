@@ -3,8 +3,10 @@ package com.example.splitwallet;
 import com.example.splitwallet.models.Group;
 import com.example.splitwallet.ui.LoginActivity;
 
+import android.content.Context;
 import android.content.SharedPreferences;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.Menu;
@@ -52,9 +54,8 @@ public class MainActivity extends AppCompatActivity {
         binding.appBarMain.fab.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                Snackbar.make(view, "Replace with your own action", Snackbar.LENGTH_LONG)
-                        .setAction("Action", null)
-                        .setAnchorView(R.id.fab).show();
+                Toast.makeText(view.getContext(), "click", Toast.LENGTH_LONG).show();
+
             }
         });
         DrawerLayout drawer = binding.drawerLayout;
@@ -90,6 +91,20 @@ public class MainActivity extends AppCompatActivity {
     }
 
     @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        if (item.getItemId() == R.id.action_settings) {
+            new AlertDialog.Builder(this)
+                    .setTitle("Выход из аккаунта")
+                    .setMessage("Вы уверены, что хотите выйти?")
+                    .setPositiveButton("Выйти", (dialog, which) -> logout(this))
+                    .setNegativeButton("Отмена", null)
+                    .show();
+            return true;
+        }
+        return super.onOptionsItemSelected(item);
+    }
+
+    @Override
     public boolean onCreateOptionsMenu(Menu menu) {
         // Inflate the menu; this adds items to the action bar if it is present.
         getMenuInflater().inflate(R.menu.main, menu);
@@ -107,7 +122,20 @@ public class MainActivity extends AppCompatActivity {
     private boolean isUserLoggedIn() {
         SharedPreferences sharedPreferences = getSharedPreferences("auth", MODE_PRIVATE);
         String token = sharedPreferences.getString("token", null);
+        Log.d("AUTH_CHECK", "Токен: " + token);
         return token != null; // Если токен есть, пользователь авторизован
+    }
+
+    private void logout(Context context){
+        SharedPreferences sharedPreferences = context.getSharedPreferences("auth", MODE_PRIVATE);
+        sharedPreferences.edit()
+                .remove("token")
+                .apply();
+
+        startActivity(new Intent(this, LoginActivity.class));
+        Toast.makeText(this, "Вы вышли из аккаунта", Toast.LENGTH_SHORT).show();
+        finish();
+
     }
 
     private void showCreateGroupDialog() {
