@@ -4,29 +4,23 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
 
+import lombok.AllArgsConstructor;
+import lombok.Getter;
+
+// Expense.java
+@Getter
 public class Expense {
-
     private Long id;
-
     private LocalDateTime createdAt;
-
     private LocalDateTime updatedAt;
-
     private String name;
-
     private LocalDate date;
-
     private String description;
-
     private Double amount;
-
-    private String currency = "RUB";
-
-    private User userWhoCreated;
-
-    private Boolean isActive = true;
-
-    private Group group;
-
-    private List<ExpenseUser> expenseUsers;
+    private String currency;
+    private Long userWhoCreatedId;
+    private Boolean isActive;
+    private Long groupId;
+    private Double currentUserPaid;
 }
+

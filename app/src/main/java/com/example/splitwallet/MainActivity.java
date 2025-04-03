@@ -1,6 +1,7 @@
 package com.example.splitwallet;
 
 import com.example.splitwallet.models.Group;
+import com.example.splitwallet.ui.GroupExpensesActivity;
 import com.example.splitwallet.ui.LoginActivity;
 
 import android.content.Context;
@@ -190,8 +191,9 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void openGroupDetails(Long groupId) {
-        // Реализация перехода к деталям группы
-        Toast.makeText(this, "Opening group: " + groupId, Toast.LENGTH_SHORT).show();
+        Intent intent = new Intent(this, GroupExpensesActivity.class);
+        intent.putExtra("groupId", groupId);
+        startActivity(intent);
     }
 
     private void showCreateGroupDialog() {
