@@ -30,4 +30,9 @@ public class ExpenseViewModel extends ViewModel {
     public void createExpense(Long groupId, CreateExpenseRequest request, String token) {
         expenseRepository.createExpense(groupId, request, token, newExpenseLiveData);
     }
+
+    public void createExpenseWithConversion(Long groupId, CreateExpenseRequest request,
+                                            String token){
+        expenseRepository.createExpenseWithConversion(groupId, request, token, newExpenseLiveData);
+    }
 }

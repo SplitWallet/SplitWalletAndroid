@@ -60,4 +60,11 @@ dependencies {
 
     // Gson
     implementation("com.google.code.gson:gson:2.10.1")
+
+    // https://mvnrepository.com/artifact/com.squareup.retrofit2/converter-simplexml
+    implementation("com.squareup.retrofit2:converter-simplexml:2.9.0")
+
+    implementation("org.simpleframework:simple-xml:2.7.1")
+
+    implementation ("com.squareup.retrofit2:converter-scalars:2.9.0")
 }

@@ -16,9 +16,12 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 
 import okhttp3.OkHttpClient;
+import okhttp3.Request;
 import okhttp3.logging.HttpLoggingInterceptor;
 import retrofit2.Retrofit;
 import retrofit2.converter.gson.GsonConverterFactory;
+import retrofit2.converter.scalars.ScalarsConverterFactory;
+import retrofit2.converter.simplexml.SimpleXmlConverterFactory;
 
 @SuppressLint("NewApi")
 public class RetrofitClient {
@@ -50,5 +53,22 @@ public class RetrofitClient {
                     .build();
         }
         return retrofit;
+    }
+    public static Retrofit getCbrRetrofitInstance() {
+        return new Retrofit.Builder()
+                .baseUrl("http://www.cbr.ru/")
+                .client(new OkHttpClient.Builder()
+                        .addInterceptor(chain -> {
+                            Request original = chain.request();
+                            Request request = original.newBuilder()
+                                    .header("Content-Type", "text/xml; charset=utf-8")
+                                    .header("SOAPAction", "http://web.cbr.ru/GetCursOnDate")
+                                    .method(original.method(), original.body())
+                                    .build();
+                            return chain.proceed(request);
+                        })
+                        .build())
+                .addConverterFactory(ScalarsConverterFactory.create()) // Для работы с сырым XML
+                .build();
     }
 }

@@ -150,7 +150,8 @@ public class GroupExpensesActivity extends AppCompatActivity {
                 CreateExpenseRequest request = new CreateExpenseRequest(
                         name, date, description, amount, currency);
                 Log.d("EXPENSE_DEBUG", "Token: " + getAuthToken()); // Для отладки
-                expenseViewModel.createExpense(groupId, request, getAuthToken());
+                //expenseViewModel.createExpense(groupId, request, getAuthToken());
+                expenseViewModel.createExpenseWithConversion(groupId, request, getAuthToken());
             } catch (NumberFormatException e) {
                 Toast.makeText(this, "Invalid amount format", Toast.LENGTH_SHORT).show();
             } catch (DateTimeParseException e) {

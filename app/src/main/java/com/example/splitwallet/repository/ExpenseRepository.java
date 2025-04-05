@@ -8,11 +8,13 @@ import com.example.splitwallet.api.ApiService;
 import com.example.splitwallet.api.RetrofitClient;
 import com.example.splitwallet.models.CreateExpenseRequest;
 import com.example.splitwallet.models.CreateGroupRequest;
+import com.example.splitwallet.models.CurrencyConverter;
 import com.example.splitwallet.models.Expense;
 import com.example.splitwallet.models.Group;
 import com.example.splitwallet.models.JWTtoken;
 import android.content.SharedPreferences;
 import android.util.Log;
+import android.widget.Toast;
 
 import java.io.IOException;
 import java.util.List;
@@ -22,12 +24,16 @@ import okio.BufferedSource;
 import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
+import retrofit2.Retrofit;
+import retrofit2.converter.gson.GsonConverterFactory;
 
 public class ExpenseRepository {
     private final ApiService apiService;
+    private final CurrencyConverter currencyConverter;
 
     public ExpenseRepository() {
         apiService = RetrofitClient.getRetrofitInstance().create(ApiService.class);
+        currencyConverter = new CurrencyConverter();
     }
 
     public void getExpenses(Long groupId, String token, MutableLiveData<List<Expense>> expensesLiveData) {
@@ -50,7 +56,27 @@ public class ExpenseRepository {
             }
         });
     }
+    public void createExpenseWithConversion(Long groupId, CreateExpenseRequest request,
+                                            String token, MutableLiveData<Expense> result) {
 
+        if ("RUB".equals(request.getCurrency())) {
+            createExpense(groupId, request, token, result);
+            return;
+        }
+
+        currencyConverter.convertToRub(groupId, request, token, new CurrencyConverter.ConversionCallback() {
+            @Override
+            public void onSuccess(CreateExpenseRequest rubRequest) {
+                createExpense(groupId, rubRequest, token, result);
+            }
+
+            @Override
+            public void onError(String error) {
+                Log.e("CONVERSION", error);
+                result.postValue(null);
+            }
+        });
+    }
     public void createExpense(Long groupId, CreateExpenseRequest request, String token,
                               MutableLiveData<Expense> expenseLiveData) {
 
