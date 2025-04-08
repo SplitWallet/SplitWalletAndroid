@@ -1,6 +1,8 @@
 package com.example.splitwallet;
 
 import com.example.splitwallet.models.Group;
+import com.example.splitwallet.ui.GroupDetailsActivity;
+import com.example.splitwallet.ui.JoinGroupActivity;
 import com.example.splitwallet.ui.LoginActivity;
 
 import android.content.Context;
@@ -18,6 +20,8 @@ import com.example.splitwallet.viewmodels.GroupViewModel;
 import com.google.android.material.snackbar.Snackbar;
 import com.google.android.material.navigation.NavigationView;
 
+import androidx.activity.result.ActivityResultLauncher;
+import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AlertDialog;
 import androidx.lifecycle.ViewModelProvider;
@@ -71,16 +75,37 @@ public class MainActivity extends AppCompatActivity {
         NavigationUI.setupWithNavController(navigationView, navController);
 
         groupViewModel = new ViewModelProvider(this).get(GroupViewModel.class);
-        navigationView.setNavigationItemSelectedListener(new NavigationView.OnNavigationItemSelectedListener() {
-            @Override
-            public boolean onNavigationItemSelected(@NonNull MenuItem item) {
-                if (item.getItemId() == R.id.nav_create_group) {
-                    showCreateGroupDialog();
-                    return true;
-                }
-                return NavigationUI.onNavDestinationSelected(item, navController) || MainActivity.super.onOptionsItemSelected(item);
+
+        navigationView.setNavigationItemSelectedListener(item -> {
+            int id = item.getItemId();
+
+            if (id == R.id.nav_create_group) {
+                showCreateGroupDialog();
+                return true;
             }
+
+            if (id == R.id.nav_join_group) {
+                SharedPreferences sharedPreferences = getSharedPreferences("auth", MODE_PRIVATE);
+                String token = sharedPreferences.getString("token", null);
+
+                Intent intent = new Intent(MainActivity.this, JoinGroupActivity.class);
+                intent.putExtra("TOKEN", token); // <-- передаём токен
+                startActivity(intent);
+                return true;
+            }
+
+            // Группы
+            if (item.getGroupId() == R.id.nav_group_list) {
+                Long groupId = (Long) item.getIntent().getSerializableExtra("GROUP_ID");
+                openGroupDetails(groupId);
+                return true;
+            }
+
+            // Остальное — навигация через NavigationUI
+            return NavigationUI.onNavDestinationSelected(item, navController)
+                    || super.onOptionsItemSelected(item);
         });
+
 
         groupViewModel.groupLiveData.observe(this, group -> {
             if (group != null) {
@@ -107,6 +132,17 @@ public class MainActivity extends AppCompatActivity {
                 Toast.makeText(this, "Failed to load groups", Toast.LENGTH_SHORT).show();
             }
         });
+
+//        // Обновляем обработчик меню
+//        navigationView.setNavigationItemSelectedListener(item -> {
+//            if (item.getItemId() == R.id.nav_create_group) {
+//                showCreateGroupDialog();
+//                return true;
+//            }
+//            // Обработка выхода остается без изменений
+//            return NavigationUI.onNavDestinationSelected(item, navController)
+//                    || super.onOptionsItemSelected(item);
+//        });
     }
 
     @Override
@@ -145,6 +181,20 @@ public class MainActivity extends AppCompatActivity {
         NavController navController = Navigation.findNavController(this, R.id.nav_host_fragment_content_main);
         return NavigationUI.navigateUp(navController, mAppBarConfiguration)
                 || super.onSupportNavigateUp();
+    }
+
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+
+        if (requestCode == 101 && resultCode == RESULT_OK) {
+            // Обновляем список групп после присоединения
+            SharedPreferences sharedPreferences = getSharedPreferences("auth", MODE_PRIVATE);
+            String token = sharedPreferences.getString("token", null);
+            if (token != null) {
+                loadUserGroups(token);
+            }
+        }
     }
 
     // Метод для проверки авторизации
@@ -190,10 +240,26 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void openGroupDetails(Long groupId) {
-        // Реализация перехода к деталям группы
-        Toast.makeText(this, "Opening group: " + groupId, Toast.LENGTH_SHORT).show();
-    }
+        // 1. Получаем название группы из списка
+        String groupName = "";
+        List<Group> groups = groupViewModel.getUserGroupsLiveData().getValue();
+        if (groups != null) {
+            for (Group group : groups) {
+                if (group.getId().equals(groupId)) {
+                    groupName = group.getName();
+                    break;
+                }
+            }
+        }
 
+        // 2. Создаем Intent для перехода
+        Intent intent = new Intent(this, GroupDetailsActivity.class);
+        intent.putExtra("GROUP_ID", groupId);
+        intent.putExtra("GROUP_NAME", groupName);
+
+        // 3. Запускаем Activity
+        startActivity(intent);
+    }
     private void showCreateGroupDialog() {
         SharedPreferences sharedPreferences = getSharedPreferences("auth", MODE_PRIVATE);
         String token = sharedPreferences.getString("token", null);
@@ -224,11 +290,26 @@ public class MainActivity extends AppCompatActivity {
     private void addGroupToMenu(Group group) {
         NavigationView navigationView = binding.navView;
         Menu menu = navigationView.getMenu();
-        menu.add(R.id.nav_group_list, Menu.NONE, Menu.NONE, group.getName()).setIcon(R.drawable.ic_menu_gallery)
+        menu.add(R.id.nav_group_list, Menu.NONE, Menu.NONE, group.getName()).setIcon(R.drawable.ic_group_icon)
                 .setOnMenuItemClickListener(item -> {
                     Toast.makeText(this, "Opening group: " + group.getName(), Toast.LENGTH_SHORT).show();
                     return true;
                 });
     }
+
+
+    private final ActivityResultLauncher<Intent> joinGroupLauncher = registerForActivityResult(
+            new ActivityResultContracts.StartActivityForResult(),
+            result -> {
+                if (result.getResultCode() == RESULT_OK) {
+                    // Пользователь присоединился к группе — обновляем меню
+                    String token = getSharedPreferences("auth", MODE_PRIVATE).getString("token", null);
+                    if (token != null) {
+                        loadUserGroups(token);
+                    }
+                }
+            }
+    );
+
 
 }

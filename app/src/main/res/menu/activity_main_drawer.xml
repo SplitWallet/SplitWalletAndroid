@@ -3,14 +3,19 @@
     xmlns:tools="http://schemas.android.com/tools"
     tools:showIn="navigation_view">
 
-
     <group android:checkableBehavior="single">
         <item
-            android:id="@+id/nav_create_group"
-            android:icon="@drawable/ic_add_group"
-            android:title="Create Group" />
-        <item
             android:id="@+id/nav_group_list"
+            android:icon="@drawable/ic_menu_home"
             android:title="@string/menu_home" />
+        <item
+            android:id="@+id/nav_create_group"
+            android:icon="@drawable/ic_menu_group_add"
+            android:title="Create Group" />
+
+        <item
+            android:id="@+id/nav_join_group"
+            android:title="Join Group"
+            android:icon="@drawable/ic_menu_join_group"/>
     </group>
 </menu>

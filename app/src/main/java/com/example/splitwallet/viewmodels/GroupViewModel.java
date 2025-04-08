@@ -8,7 +8,9 @@ import androidx.lifecycle.ViewModel;
 
 import com.example.splitwallet.models.Group;
 import com.example.splitwallet.models.JWTtoken;
+import com.example.splitwallet.models.User;
 import com.example.splitwallet.repository.GroupRepository;
+import com.example.splitwallet.models.UserResponse;
 
 import java.util.List;
 
@@ -20,11 +22,27 @@ public class GroupViewModel extends ViewModel {
     // Добавляем LiveData для токена
     private MutableLiveData<JWTtoken> tokenLiveData;
 
+    private MutableLiveData<List<UserResponse>> groupMembersLiveData = new MutableLiveData<>();
+
+    private MutableLiveData<String> errorLiveData = new MutableLiveData<>();
+
     public LiveData<List<Group>> getUserGroupsLiveData() {
         return userGroupsLiveData;
     }
+
+    public LiveData<List<UserResponse>> getGroupMembersLiveData() {
+        return groupMembersLiveData;
+    }
+
+    public LiveData<String> getErrorLiveData() {
+        return errorLiveData;
+    }
     public void loadUserGroups(String token) {
         groupRepository.getUserGroups(token, userGroupsLiveData);
+    }
+
+    public void loadGroupMembers(Long groupId, String token) {
+        groupRepository.getGroupMembers(groupId, token, groupMembersLiveData);
     }
 
     // Метод для установки токена
