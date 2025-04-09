@@ -10,4 +10,12 @@
     <string name="menu_home">Home</string>
     <string name="menu_gallery">Gallery</string>
     <string name="menu_slideshow">Slideshow</string>
+    <string name="user_avatar">User Avatar</string>
+    <string name="user">User</string>
+    <string name="user_gmail_com">user@gmail.com</string>
+
+    <string name="created_at">Created: %s</string>
+    <string name="owner">Owner: %s</string>
+    <string name="error_load_group">Failed to load group details</string>
+    <string name="invalid_auth">Invalid group or authentication</string>
 </resources>

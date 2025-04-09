@@ -32,6 +32,9 @@ android {
     buildFeatures {
         viewBinding = true
     }
+    buildFeatures {
+        dataBinding = true
+    }
 }
 
 dependencies {
@@ -43,6 +46,7 @@ dependencies {
     implementation(libs.lifecycle.viewmodel.ktx)
     implementation(libs.navigation.fragment)
     implementation(libs.navigation.ui)
+    implementation(libs.activity)
     testImplementation(libs.junit)
     androidTestImplementation(libs.ext.junit)
     androidTestImplementation(libs.espresso.core)
@@ -51,8 +55,8 @@ dependencies {
     implementation("com.squareup.retrofit2:converter-gson:2.9.0") // Для работы с JSON (Gson)
 
     // Lombok
-    compileOnly("org.projectlombok:lombok:1.18.36")
-    annotationProcessor ("org.projectlombok:lombok:1.18.36")
+    compileOnly("org.projectlombok:lombok:1.18.34")
+    annotationProcessor ("org.projectlombok:lombok:1.18.34")
 
     // OkHttp
     implementation("com.squareup.okhttp3:okhttp:4.12.0")
@@ -67,4 +71,6 @@ dependencies {
     implementation("org.simpleframework:simple-xml:2.7.1")
 
     implementation ("com.squareup.retrofit2:converter-scalars:2.9.0")
+
+    implementation("com.jakewharton.threetenabp:threetenabp:1.3.1")
 }

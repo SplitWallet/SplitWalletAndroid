@@ -87,7 +87,7 @@ public class GroupExpensesActivity extends AppCompatActivity {
             if (expense != null) {
                 expenseViewModel.loadExpenses(groupId, getAuthToken()); // Обновляем список
                 Toast.makeText(this, "Expense added", Toast.LENGTH_SHORT).show();
-            }else{
+            } else {
                 Toast.makeText(this, "Ошибка доступа. Проверьте авторизацию", Toast.LENGTH_SHORT).show();
             }
         });
