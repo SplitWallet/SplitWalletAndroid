@@ -52,11 +52,6 @@ public interface ApiService {
             @Header("Authorization") String authToken
     );
 
-    @GET("groups/{groupId}/expenses")
-    Call<List<Expense>> getGroupExpenses(
-            @Path("groupId") Long groupId,
-            @Header("Authorization") String authToken
-    );
     @GET("groups/{groupId}/members")
     Call<List<UserResponse>> getGroupMembers(
             @Path("groupId") Long groupId,

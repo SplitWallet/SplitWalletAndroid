@@ -234,19 +234,15 @@ public class MainActivity extends AppCompatActivity {
             menu.add(R.id.nav_group_list, Menu.NONE, Menu.NONE, group.getName())
                     .setIcon(R.drawable.ic_group_icon)
                     .setOnMenuItemClickListener(item -> {
-                        openGroupDetails(group.getId());
+                        openGroupExpenses(group.getId()); // TODO: сделать другой способ открытия GroupDetailsActivity
                         return true;
                     });
         }
     }
 
     private void openGroupDetails(Long groupId) {
-        Intent intent = new Intent(this, GroupExpensesActivity.class);
-        intent.putExtra("groupId", groupId);
-        startActivity(intent);
-    }
         // 1. Получаем название группы из списка
-        /*String groupName = "";
+        String groupName = "";
         List<Group> groups = groupViewModel.getUserGroupsLiveData().getValue();
         if (groups != null) {
             for (Group group : groups) {
@@ -263,8 +259,14 @@ public class MainActivity extends AppCompatActivity {
         intent.putExtra("GROUP_NAME", groupName);
 
         // 3. Запускаем Activity
-        startActivity(intent);*/
+        startActivity(intent);
     }
+    private void openGroupExpenses(Long groupId) {
+        Intent intent = new Intent(this, GroupExpensesActivity.class);
+        intent.putExtra("groupId", groupId);
+        startActivity(intent);
+    }
+
     private void showCreateGroupDialog() {
         SharedPreferences sharedPreferences = getSharedPreferences("auth", MODE_PRIVATE);
         String token = sharedPreferences.getString("token", null);
@@ -295,26 +297,11 @@ public class MainActivity extends AppCompatActivity {
     private void addGroupToMenu(Group group) {
         NavigationView navigationView = binding.navView;
         Menu menu = navigationView.getMenu();
-        menu.add(R.id.nav_group_list, Menu.NONE, Menu.NONE, group.getName()).setIcon(R.drawable.ic_group_icon)
+        menu.add(R.id.nav_group_list, Menu.NONE, Menu.NONE, group.getName()).setIcon(R.drawable.ic_menu_gallery)
                 .setOnMenuItemClickListener(item -> {
                     Toast.makeText(this, "Opening group: " + group.getName(), Toast.LENGTH_SHORT).show();
                     return true;
                 });
     }
-
-
-    private final ActivityResultLauncher<Intent> joinGroupLauncher = registerForActivityResult(
-            new ActivityResultContracts.StartActivityForResult(),
-            result -> {
-                if (result.getResultCode() == RESULT_OK) {
-                    // Пользователь присоединился к группе — обновляем меню
-                    String token = getSharedPreferences("auth", MODE_PRIVATE).getString("token", null);
-                    if (token != null) {
-                        loadUserGroups(token);
-                    }
-                }
-            }
-    );
-
 
 }
