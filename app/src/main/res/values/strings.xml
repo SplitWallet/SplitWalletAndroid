@@ -7,6 +7,11 @@
     <string name="nav_header_desc">Navigation header</string>
     <string name="action_settings">Log out</string>
 
+    <string name="no_expenses">No expenses yet</string>
+    <string name="add_expense">Add expense</string>
+    <string name="invite">Invite</string>
+    <string name="leave_group">Leave group</string>
+
     <string name="menu_home">Home</string>
     <string name="menu_gallery">Gallery</string>
     <string name="menu_slideshow">Slideshow</string>

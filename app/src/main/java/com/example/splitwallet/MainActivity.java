@@ -3,6 +3,7 @@ package com.example.splitwallet;
 import com.example.splitwallet.models.Group;
 import com.example.splitwallet.ui.GroupExpensesActivity;
 import com.example.splitwallet.ui.GroupDetailsActivity;
+import com.example.splitwallet.ui.GroupPagerActivity;
 import com.example.splitwallet.ui.JoinGroupActivity;
 import com.example.splitwallet.ui.LoginActivity;
 
@@ -262,8 +263,21 @@ public class MainActivity extends AppCompatActivity {
         startActivity(intent);
     }
     private void openGroupExpenses(Long groupId) {
-        Intent intent = new Intent(this, GroupExpensesActivity.class);
-        intent.putExtra("groupId", groupId);
+        // Получаем название группы
+        String groupName = "";
+        List<Group> groups = groupViewModel.getUserGroupsLiveData().getValue();
+        if (groups != null) {
+            for (Group group : groups) {
+                if (group.getId().equals(groupId)) {
+                    groupName = group.getName();
+                    break;
+                }
+            }
+        }
+
+        Intent intent = new Intent(this, GroupPagerActivity.class);
+        intent.putExtra("GROUP_ID", groupId);
+        intent.putExtra("GROUP_NAME", groupName);
         startActivity(intent);
     }
 

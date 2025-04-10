@@ -57,16 +57,16 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
+
         <activity
             android:name=".ui.GroupExpensesActivity"
             android:theme="@style/Theme.SplitWallet.NoActionBar"
             android:parentActivityName=".MainActivity">
         </activity>
         <activity
-            android:name=".ui.GroupExpensesActivity"
-            android:theme="@style/Theme.SplitWallet.NoActionBar"
-            android:parentActivityName=".MainActivity">
-        </activity>
+            android:name=".ui.GroupPagerActivity"
+            android:exported="false"
+            android:theme="@style/AppTheme" />
     </application>
 
 </manifest>
