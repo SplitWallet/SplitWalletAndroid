@@ -18,7 +18,7 @@ public class Expense {
     private String description;
     private Double amount;
     private String currency;
-    private Long userWhoCreatedId;
+    private String userWhoCreatedId;
     private Boolean isActive;
     private Long groupId;
     private Double currentUserPaid;

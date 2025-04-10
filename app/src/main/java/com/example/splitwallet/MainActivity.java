@@ -314,6 +314,7 @@ public class MainActivity extends AppCompatActivity {
         menu.add(R.id.nav_group_list, Menu.NONE, Menu.NONE, group.getName()).setIcon(R.drawable.ic_menu_gallery)
                 .setOnMenuItemClickListener(item -> {
                     Toast.makeText(this, "Opening group: " + group.getName(), Toast.LENGTH_SHORT).show();
+                    openGroupExpenses(group.getId());
                     return true;
                 });
     }
