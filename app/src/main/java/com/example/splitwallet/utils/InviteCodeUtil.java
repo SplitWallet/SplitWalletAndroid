@@ -1,24 +1,46 @@
 package com.example.splitwallet.utils;
 
 public class InviteCodeUtil {
-    private static final String ALPHABET = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz";
-    private static final int BASE = ALPHABET.length();
+    private static final String ALPHABET = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+    private static final int BASE = ALPHABET.length(); // 36
+    private static final int CODE_LENGTH = 6;
+    private static final long OBFUSCATION_KEY = 0x7F4A9C13L; // XOR-ключ (можно любой фиксированный)
+    public static String encode(Long number) {
 
-    public static String encode(long num) {
+        long obfuscated = number ^ OBFUSCATION_KEY;
+
         StringBuilder sb = new StringBuilder();
-        while (num > 0) {
-            sb.append(ALPHABET.charAt((int)(num % BASE)));
-            num /= BASE;
+        while (obfuscated > 0) {
+            int index = (int) (obfuscated % BASE);
+            sb.append(ALPHABET.charAt(index));
+            obfuscated /= BASE;
         }
-        while (sb.length() < 6) sb.append('0'); // padding до 6 символов
-        return sb.reverse().toString();
+
+        // Заполненяем слева '0', если длина меньше 6
+        while (sb.length() < CODE_LENGTH) {
+            sb.append('0');
+        }
+
+        return sb.reverse().toString(); // Переворачиваем, чтобы старшие разряды шли слева
     }
 
-    public static long decode(String code) {
-        long num = 0;
-        for (int i = 0; i < code.length(); i++) {
-            num = num * BASE + ALPHABET.indexOf(code.charAt(i));
+    public static Long decode(String code) {
+        if (code == null || code.length() != CODE_LENGTH) {
+            throw new IllegalArgumentException();
         }
-        return num;
+
+        code = code.toUpperCase();
+
+        long obfuscated = 0;
+        for (int i = 0; i < code.length(); i++) {
+            int index = ALPHABET.indexOf(code.charAt(i));
+            if (index == -1) {
+                throw new IllegalArgumentException();
+            }
+            obfuscated = obfuscated * BASE + index;
+        }
+
+        return obfuscated ^ OBFUSCATION_KEY;
     }
+
 }
