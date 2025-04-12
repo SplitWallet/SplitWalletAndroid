@@ -12,6 +12,7 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ArrayAdapter;
 import android.widget.EditText;
+import android.widget.PopupMenu;
 import android.widget.Spinner;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -28,14 +29,22 @@ import com.example.splitwallet.R;
 import com.example.splitwallet.ui.LoginActivity;
 import com.example.splitwallet.viewmodels.ExpenseViewModel;
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
+import com.google.zxing.integration.android.IntentIntegrator;
+import com.google.zxing.integration.android.IntentResult;
 
 import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeParseException;
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.stream.Collectors;
 
 public class ExpensesFragment extends Fragment {
     private Long groupId;
     private ExpenseViewModel expenseViewModel;
     private ExpenseAdapter adapter;
+    private FloatingActionButton fabMain;
 
     public static ExpensesFragment newInstance(Long groupId) {
         ExpensesFragment fragment = new ExpensesFragment();
@@ -57,37 +66,37 @@ public class ExpensesFragment extends Fragment {
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
-        View view = inflater.inflate(R.layout.fragment_expenses, container, false);
+        // Только инфлейтим представление, не работаем с View здесь
+        return inflater.inflate(R.layout.fragment_expenses, container, false);
+    }
 
+    @Override
+    public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
+        super.onViewCreated(view, savedInstanceState);
+
+        // Инициализация всех View
         RecyclerView recyclerView = view.findViewById(R.id.recyclerView);
         TextView emptyView = view.findViewById(R.id.emptyView);
-        FloatingActionButton fab = view.findViewById(R.id.fab);
+        fabMain = view.findViewById(R.id.fabMain);
 
+        // Настройка RecyclerView
         adapter = new ExpenseAdapter();
         recyclerView.setLayoutManager(new LinearLayoutManager(getContext()));
         recyclerView.setAdapter(adapter);
 
+        // Загрузка данных
         loadExpenses();
 
+        // Наблюдатели LiveData
         expenseViewModel.getExpensesLiveData().observe(getViewLifecycleOwner(), expenses -> {
             if (expenses != null) {
                 adapter.submitList(expenses);
                 emptyView.setVisibility(expenses.isEmpty() ? View.VISIBLE : View.GONE);
-            } else {
-                Toast.makeText(getContext(), "Failed to load expenses", Toast.LENGTH_SHORT).show();
             }
         });
 
-        expenseViewModel.getNewExpenseLiveData().observe(getViewLifecycleOwner(), expense -> {
-            if (expense != null) {
-                loadExpenses(); // Обновляем список
-                Toast.makeText(getContext(), "Expense added", Toast.LENGTH_SHORT).show();
-            }
-        });
-
-        fab.setOnClickListener(v -> showAddExpenseDialog());
-
-        return view;
+        // Настройка FAB
+        setupFAB();
     }
 
     private void loadExpenses() {
@@ -176,4 +185,100 @@ public class ExpensesFragment extends Fragment {
         builder.setNegativeButton("Cancel", null);
         builder.create().show();
     }
+
+    private void setupFAB() {
+        fabMain.setOnClickListener(v -> {
+            PopupMenu popupMenu = new PopupMenu(requireContext(), fabMain);
+            popupMenu.getMenuInflater().inflate(R.menu.expense_add_options, popupMenu.getMenu());
+
+            popupMenu.setOnMenuItemClickListener(item -> {
+                if (item.getItemId() == R.id.menu_add_manual) {
+                    showAddExpenseDialog();
+                    return true;
+                } else if (item.getItemId() == R.id.menu_add_qr) {
+                    startQRScanner();
+                    return true;
+                }
+                return false;
+            });
+
+            popupMenu.show();
+        });
+    }
+
+    private void startQRScanner() {
+        try {
+            IntentIntegrator integrator = IntentIntegrator.forSupportFragment(this);
+            integrator.setDesiredBarcodeFormats(IntentIntegrator.QR_CODE);
+            integrator.setPrompt("Scan receipt QR code");
+            integrator.setCameraId(0);
+            integrator.setBeepEnabled(false);
+            integrator.initiateScan();
+        } catch (Exception e) {
+            Toast.makeText(requireContext(), "QR scanner not available", Toast.LENGTH_SHORT).show();
+        }
+    }
+    // Обработка результата сканирования
+    @Override
+    public void onActivityResult(int requestCode, int resultCode, Intent data) {
+        IntentResult result = IntentIntegrator.parseActivityResult(requestCode, resultCode, data);
+        if (result != null) {
+            if (result.getContents() == null) {
+                Toast.makeText(requireContext(), "Cancelled", Toast.LENGTH_SHORT).show();
+            } else {
+                parseQRData(result.getContents());
+            }
+        } else {
+            super.onActivityResult(requestCode, resultCode, data);
+        }
+    }
+
+    private void parseQRData(String qrData) {
+        try {
+            // Пример QR: t=20250405T1853&s=19837.00&fn=7381440700168628&i=10975&fp=3291082750&n=1
+            Map<String, String> params = Arrays.stream(qrData.split("&"))
+                    .map(pair -> pair.split("="))
+                    .filter(keyValue -> keyValue.length == 2)
+                    .collect(Collectors.toMap(
+                            keyValue -> keyValue[0],
+                            keyValue -> keyValue[1]
+                    ));
+
+            // Парсим дату из формата yyyyMMdd (первые 8 символов до 'T')
+            String dateStr = params.get("t").substring(0, 8);
+            DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyyMMdd");
+            LocalDate date = LocalDate.parse(dateStr, formatter);
+
+            // Создаем расход на основе данных QR
+            CreateExpenseRequest request = new CreateExpenseRequest(
+                    "Чек " + params.get("fn") + "-" + params.get("i"), // Название
+                    date, // Дата
+                    "Оплата по чеку", // Описание
+                    Double.parseDouble(params.get("s")), // Сумма
+                    "RUB" // Валюта
+            );
+
+            String token = getAuthToken();
+            if (token != null) {
+                expenseViewModel.createExpense(groupId, request, token);
+                Toast.makeText(requireContext(), "Расход добавлен", Toast.LENGTH_SHORT).show();
+            }
+        } catch (Exception e) {
+            Toast.makeText(requireContext(), "Ошибка обработки QR: " + e.getMessage(), Toast.LENGTH_LONG).show();
+            Log.e("QR_ERROR", "Error parsing QR: " + qrData, e);
+        }
+    }
+
+    private Map<String, String> parseQRParameters(String qrData) {
+        Map<String, String> params = new HashMap<>();
+        String[] pairs = qrData.split("&");
+        for (String pair : pairs) {
+            String[] keyValue = pair.split("=");
+            if (keyValue.length == 2) {
+                params.put(keyValue[0], keyValue[1]);
+            }
+        }
+        return params;
+    }
+
 }

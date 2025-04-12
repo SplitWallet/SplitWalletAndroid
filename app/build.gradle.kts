@@ -76,4 +76,6 @@ dependencies {
 
     implementation ("androidx.viewpager2:viewpager2:1.0.0")
     implementation ("com.google.android.material:material:1.6.0")
+    implementation ("com.journeyapps:zxing-android-embedded:4.3.0")
+    implementation ("com.github.clans:fab:1.6.4")
 }
