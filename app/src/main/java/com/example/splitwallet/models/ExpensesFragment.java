@@ -24,6 +24,7 @@ import androidx.fragment.app.Fragment;
 import androidx.lifecycle.ViewModelProvider;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
+import androidx.swiperefreshlayout.widget.SwipeRefreshLayout;
 
 import com.example.splitwallet.R;
 import com.example.splitwallet.ui.LoginActivity;
@@ -45,6 +46,8 @@ public class ExpensesFragment extends Fragment {
     private ExpenseViewModel expenseViewModel;
     private ExpenseAdapter adapter;
     private FloatingActionButton fabMain;
+    private SwipeRefreshLayout swipeRefreshLayout;
+    private TextView emptyView;
 
     public static ExpensesFragment newInstance(Long groupId) {
         ExpensesFragment fragment = new ExpensesFragment();
@@ -73,6 +76,16 @@ public class ExpensesFragment extends Fragment {
     @Override
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
+        emptyView = view.findViewById(R.id.emptyView);
+        swipeRefreshLayout = view.findViewById(R.id.swipeRefreshLayout);
+        swipeRefreshLayout.setColorSchemeResources(
+                R.color.colorPrimary,
+                R.color.colorPrimaryDark,
+                R.color.colorAccent
+        );
+        swipeRefreshLayout.setOnRefreshListener(() -> {
+            loadExpenses();
+        });
 
         // Инициализация всех View
         RecyclerView recyclerView = view.findViewById(R.id.recyclerView);
@@ -100,10 +113,26 @@ public class ExpensesFragment extends Fragment {
     }
 
     private void loadExpenses() {
+        swipeRefreshLayout.setRefreshing(true);
         String token = getAuthToken();
         if (token != null) {
-            expenseViewModel.loadExpenses(groupId, token);
+            expenseViewModel.loadExpenses(groupId, "Bearer " + token);
         }
+
+        expenseViewModel.getExpensesLiveData().observe(getViewLifecycleOwner(), expenses -> {
+            if (expenses != null) {
+                adapter.submitList(expenses);
+                emptyView.setVisibility(expenses.isEmpty() ? View.VISIBLE : View.GONE);
+            }
+            swipeRefreshLayout.setRefreshing(false);
+        });
+
+        expenseViewModel.getErrorLiveData().observe(getViewLifecycleOwner(), error -> {
+            if (error != null) {
+                Toast.makeText(getContext(), error, Toast.LENGTH_SHORT).show();
+                swipeRefreshLayout.setRefreshing(false);
+            }
+        });
     }
 
     private String getAuthToken() {

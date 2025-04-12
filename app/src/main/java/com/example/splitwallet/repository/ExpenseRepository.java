@@ -30,29 +30,36 @@ import retrofit2.converter.gson.GsonConverterFactory;
 public class ExpenseRepository {
     private final ApiService apiService;
     private final CurrencyConverter currencyConverter;
+    public interface ExpensesCallback {
+        void onSuccess(List<Expense> expenses);
+        void onError(String error);
+    }
+
 
     public ExpenseRepository() {
         apiService = RetrofitClient.getRetrofitInstance().create(ApiService.class);
         currencyConverter = new CurrencyConverter();
     }
 
-    public void getExpenses(Long groupId, String token, MutableLiveData<List<Expense>> expensesLiveData) {
-        Call<List<Expense>> call = apiService.getGroupExpenses(groupId, "Bearer " + token);
+    public void getExpenses(Long groupId, String token, ExpensesCallback callback) {
+        Call<List<Expense>> call = apiService.getGroupExpenses(groupId, token);
         call.enqueue(new Callback<List<Expense>>() {
             @Override
             public void onResponse(Call<List<Expense>> call, Response<List<Expense>> response) {
                 if (response.isSuccessful()) {
-                    expensesLiveData.setValue(response.body());
+                    callback.onSuccess(response.body());
                 } else {
-                    Log.e("API_ERROR", "Failed to get expenses: " + response.code());
-                    expensesLiveData.setValue(null);
+                    try {
+                        callback.onError("Error: " + response.errorBody().string());
+                    } catch (IOException e) {
+                        callback.onError("Unknown error");
+                    }
                 }
             }
 
             @Override
             public void onFailure(Call<List<Expense>> call, Throwable t) {
-                Log.e("API_FAILURE", "Network error: ", t);
-                expensesLiveData.setValue(null);
+                callback.onError("Network error: " + t.getMessage());
             }
         });
     }
