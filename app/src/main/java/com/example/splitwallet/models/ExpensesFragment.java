@@ -76,8 +76,23 @@ public class ExpensesFragment extends Fragment {
     @Override
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
-        emptyView = view.findViewById(R.id.emptyView);
         swipeRefreshLayout = view.findViewById(R.id.swipeRefreshLayout);
+        emptyView = view.findViewById(R.id.emptyView);
+
+        // Инициализация всех View
+        RecyclerView recyclerView = view.findViewById(R.id.recyclerView);
+        TextView emptyView = view.findViewById(R.id.emptyView);
+        fabMain = view.findViewById(R.id.fabMain);
+
+
+        // Настройка RecyclerView
+        adapter = new ExpenseAdapter();
+        adapter.setOnExpenseClickListener(expense -> {
+            showEditExpenseDialog(expense);
+        });
+        recyclerView.setLayoutManager(new LinearLayoutManager(getContext()));
+        recyclerView.setAdapter(adapter);
+
         swipeRefreshLayout.setColorSchemeResources(
                 R.color.colorPrimary,
                 R.color.colorPrimaryDark,
@@ -86,16 +101,6 @@ public class ExpensesFragment extends Fragment {
         swipeRefreshLayout.setOnRefreshListener(() -> {
             loadExpenses();
         });
-
-        // Инициализация всех View
-        RecyclerView recyclerView = view.findViewById(R.id.recyclerView);
-        TextView emptyView = view.findViewById(R.id.emptyView);
-        fabMain = view.findViewById(R.id.fabMain);
-
-        // Настройка RecyclerView
-        adapter = new ExpenseAdapter();
-        recyclerView.setLayoutManager(new LinearLayoutManager(getContext()));
-        recyclerView.setAdapter(adapter);
 
         // Загрузка данных
         loadExpenses();
@@ -106,6 +111,13 @@ public class ExpensesFragment extends Fragment {
                 adapter.submitList(expenses);
                 emptyView.setVisibility(expenses.isEmpty() ? View.VISIBLE : View.GONE);
             }
+        });
+
+        expenseViewModel.getErrorLiveData().observe(getViewLifecycleOwner(), error -> {
+            if (error != null) {
+                Toast.makeText(getContext(), error, Toast.LENGTH_SHORT).show();
+            }
+            swipeRefreshLayout.setRefreshing(false);
         });
 
         // Настройка FAB
@@ -212,6 +224,111 @@ public class ExpensesFragment extends Fragment {
         });
 
         builder.setNegativeButton("Cancel", null);
+        builder.create().show();
+    }
+
+    private void showEditExpenseDialog(Expense expense) {
+        AlertDialog.Builder builder = new AlertDialog.Builder(requireContext());
+        builder.setTitle("Edit Expense");
+
+        View dialogView = LayoutInflater.from(requireContext())
+                .inflate(R.layout.dialog_add_expense, null);
+        builder.setView(dialogView);
+
+        EditText etName = dialogView.findViewById(R.id.etName);
+        EditText etDescription = dialogView.findViewById(R.id.etDescription);
+        EditText etAmount = dialogView.findViewById(R.id.etAmount);
+        EditText etDate = dialogView.findViewById(R.id.etDate);
+        Spinner spinnerCurrency = dialogView.findViewById(R.id.spinnerCurrency);
+
+        // Заполняем поля данными расхода
+        etName.setText(expense.getName());
+        etDescription.setText(expense.getDescription());
+        etAmount.setText(String.valueOf(expense.getAmount()));
+        etDate.setText(expense.getDate().toString());
+
+        // Настройка спиннера валют
+        ArrayAdapter<CharSequence> currencyAdapter = ArrayAdapter.createFromResource(
+                requireContext(),
+                R.array.currencies,
+                android.R.layout.simple_spinner_item);
+        currencyAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
+        spinnerCurrency.setAdapter(currencyAdapter);
+
+        // Устанавливаем выбранную валюту
+        int currencyPosition = currencyAdapter.getPosition(expense.getCurrency());
+        if (currencyPosition >= 0) {
+            spinnerCurrency.setSelection(currencyPosition);
+        }
+
+        // Настройка DatePicker
+        etDate.setOnClickListener(v -> {
+            LocalDate currentDate = LocalDate.parse(etDate.getText().toString());
+            DatePickerDialog datePicker = new DatePickerDialog(requireContext(),
+                    (view, year, month, dayOfMonth) -> {
+                        LocalDate selectedDate = LocalDate.of(year, month + 1, dayOfMonth);
+                        etDate.setText(selectedDate.toString());
+                    },
+                    currentDate.getYear(),
+                    currentDate.getMonthValue() - 1,
+                    currentDate.getDayOfMonth());
+            datePicker.show();
+        });
+
+        builder.setPositiveButton("Save", (dialog, which) -> {
+            // Получаем обновленные данные
+            String name = etName.getText().toString();
+            String description = etDescription.getText().toString();
+            String amountStr = etAmount.getText().toString();
+            String dateStr = etDate.getText().toString();
+            String currency = spinnerCurrency.getSelectedItem().toString();
+
+            if (name.isEmpty() || amountStr.isEmpty()) {
+                Toast.makeText(requireContext(),
+                        "Name and amount are required", Toast.LENGTH_SHORT).show();
+                return;
+            }
+
+            try {
+                double amount = Double.parseDouble(amountStr);
+                LocalDate date = LocalDate.parse(dateStr);
+
+                // Создаем запрос на обновление
+                UpdateExpenseRequest request = new UpdateExpenseRequest(
+                        name, date, description, amount, currency);
+
+                String token = getAuthToken();
+                if (token != null) {
+                    expenseViewModel.updateExpense(
+                            groupId, expense.getId(), request, token);
+                }
+            } catch (NumberFormatException e) {
+                Toast.makeText(requireContext(),
+                        "Invalid amount format", Toast.LENGTH_SHORT).show();
+            } catch (DateTimeParseException e) {
+                Toast.makeText(requireContext(),
+                        "Invalid date format", Toast.LENGTH_SHORT).show();
+            }
+        });
+
+        builder.setNegativeButton("Cancel", null);
+
+        // Добавляем кнопку удаления
+        builder.setNeutralButton("Delete", (dialog, which) -> {
+            new AlertDialog.Builder(requireContext())
+                    .setTitle("Delete Expense")
+                    .setMessage("Are you sure you want to delete this expense?")
+                    .setPositiveButton("Delete", (d, w) -> {
+                        String token = getAuthToken();
+                        if (token != null) {
+                            expenseViewModel.deleteExpense(
+                                    groupId, expense.getId(), token);
+                        }
+                    })
+                    .setNegativeButton("Cancel", null)
+                    .show();
+        });
+
         builder.create().show();
     }
 

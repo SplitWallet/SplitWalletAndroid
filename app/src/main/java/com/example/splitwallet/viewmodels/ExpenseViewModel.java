@@ -6,6 +6,8 @@ import androidx.lifecycle.ViewModel;
 
 import com.example.splitwallet.models.CreateExpenseRequest;
 import com.example.splitwallet.models.Expense;
+import com.example.splitwallet.models.ExpensesCallback;
+import com.example.splitwallet.models.UpdateExpenseRequest;
 import com.example.splitwallet.repository.ExpenseRepository;
 
 import java.util.List;
@@ -50,5 +52,36 @@ public class ExpenseViewModel extends ViewModel {
     public void createExpenseWithConversion(Long groupId, CreateExpenseRequest request,
                                             String token){
         expenseRepository.createExpenseWithConversion(groupId, request, token, newExpenseLiveData);
+    }
+    public void updateExpense(Long groupId, Long expenseId,
+                              UpdateExpenseRequest request, String token) {
+        expenseRepository.updateExpense(groupId, expenseId, request, token,
+                new ExpenseRepository.ExpenseCallback() {
+                    @Override
+                    public void onSuccess(Expense expense) {
+                        // Обновляем список расходов
+                        loadExpenses(groupId, token);
+                    }
+
+                    @Override
+                    public void onError(String error) {
+                        errorLiveData.postValue(error);
+                    }
+                });
+    }
+    public void deleteExpense(Long groupId, Long expenseId, String token) {
+        expenseRepository.deleteExpense(groupId, expenseId, token,
+                new ExpenseRepository.ExpenseCallback() {
+                    @Override
+                    public void onSuccess(Expense expense) {
+                        // Обновляем список расходов
+                        loadExpenses(groupId, token);
+                    }
+
+                    @Override
+                    public void onError(String error) {
+                        errorLiveData.postValue(error);
+                    }
+                });
     }
 }

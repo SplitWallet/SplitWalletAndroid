@@ -12,19 +12,17 @@ import androidx.recyclerview.widget.RecyclerView;
 import com.example.splitwallet.databinding.ItemExpenseBinding;
 
 public class ExpenseAdapter extends ListAdapter<Expense, ExpenseAdapter.ExpenseViewHolder> {
-    public ExpenseAdapter() {
-        super(new DiffUtil.ItemCallback<Expense>() {
-            @Override
-            public boolean areItemsTheSame(@NonNull Expense oldItem, @NonNull Expense newItem) {
-                return oldItem.getId().equals(newItem.getId());
-            }
+    private static OnExpenseClickListener listener;
+    public interface OnExpenseClickListener {
+        void onExpenseClick(Expense expense);
+    }
 
-            @SuppressLint("DiffUtilEquals")
-            @Override
-            public boolean areContentsTheSame(@NonNull Expense oldItem, @NonNull Expense newItem) {
-                return oldItem.equals(newItem);
-            }
-        });
+    public ExpenseAdapter() {
+        super(DIFF_CALLBACK);
+    }
+
+    public void setOnExpenseClickListener(OnExpenseClickListener listener) {
+        this.listener = listener;
     }
 
     @NonNull
@@ -54,6 +52,25 @@ public class ExpenseAdapter extends ListAdapter<Expense, ExpenseAdapter.ExpenseV
                     expense.getCurrency(), expense.getAmount()));
             binding.tvDate.setText(expense.getDate().toString());
             binding.tvDescription.setText(expense.getDescription());
+
+            itemView.setOnClickListener(v -> {
+                if (listener != null) {
+                    listener.onExpenseClick(expense);
+                }
+            });
         }
     }
+    private static final DiffUtil.ItemCallback<Expense> DIFF_CALLBACK =
+            new DiffUtil.ItemCallback<Expense>() {
+                @Override
+                public boolean areItemsTheSame(@NonNull Expense oldItem, @NonNull Expense newItem) {
+                    return oldItem.getId().equals(newItem.getId());
+                }
+
+                @SuppressLint("DiffUtilEquals")
+                @Override
+                public boolean areContentsTheSame(@NonNull Expense oldItem, @NonNull Expense newItem) {
+                    return oldItem.equals(newItem);
+                }
+            };
 }

@@ -10,8 +10,12 @@ import com.example.splitwallet.models.CreateExpenseRequest;
 import com.example.splitwallet.models.CreateGroupRequest;
 import com.example.splitwallet.models.CurrencyConverter;
 import com.example.splitwallet.models.Expense;
+import com.example.splitwallet.models.ExpenseCallback;
+import com.example.splitwallet.models.ExpensesCallback;
 import com.example.splitwallet.models.Group;
 import com.example.splitwallet.models.JWTtoken;
+import com.example.splitwallet.models.UpdateExpenseRequest;
+
 import android.content.SharedPreferences;
 import android.util.Log;
 import android.widget.Toast;
@@ -30,10 +34,6 @@ import retrofit2.converter.gson.GsonConverterFactory;
 public class ExpenseRepository {
     private final ApiService apiService;
     private final CurrencyConverter currencyConverter;
-    public interface ExpensesCallback {
-        void onSuccess(List<Expense> expenses);
-        void onError(String error);
-    }
 
 
     public ExpenseRepository() {
@@ -109,5 +109,65 @@ public class ExpenseRepository {
                 expenseLiveData.setValue(null);
             }
         });
+    }
+
+    public void updateExpense(Long groupId, Long expenseId,
+                              UpdateExpenseRequest request, String token,
+                              ExpenseCallback callback) {
+        Call<Expense> call = apiService.updateExpense(groupId, expenseId, "Bearer "+ token, request);
+        call.enqueue(new Callback<Expense>() {
+            @Override
+            public void onResponse(Call<Expense> call, Response<Expense> response) {
+                if (response.isSuccessful()) {
+                    callback.onSuccess(response.body());
+                } else {
+                    try {
+                        callback.onError("Error: " + response.errorBody().string());
+                    } catch (IOException e) {
+                        callback.onError("Unknown error");
+                    }
+                }
+            }
+
+            @Override
+            public void onFailure(Call<Expense> call, Throwable t) {
+                callback.onError("Network error: " + t.getMessage());
+            }
+        });
+    }
+
+    public void deleteExpense(Long groupId, Long expenseId, String token,
+                              ExpenseCallback callback) {
+        Call<Void> call = apiService.deleteExpense(groupId, expenseId, "Bearer " + token);
+        call.enqueue(new Callback<Void>() {
+            @Override
+            public void onResponse(Call<Void> call, Response<Void> response) {
+                if (response.isSuccessful()) {
+                    // Создаем пустой expense для колбэка
+                    callback.onSuccess(new Expense());
+                } else {
+                    try {
+                        callback.onError("Error: " + response.errorBody().string());
+                    } catch (IOException e) {
+                        callback.onError("Unknown error");
+                    }
+                }
+            }
+
+            @Override
+            public void onFailure(Call<Void> call, Throwable t) {
+                callback.onError("Network error: " + t.getMessage());
+            }
+        });
+    }
+
+    public interface ExpensesCallback {
+        void onSuccess(List<Expense> expenses);
+        void onError(String error);
+    }
+
+    public interface ExpenseCallback {
+        void onSuccess(Expense expense);
+        void onError(String error);
     }
 }

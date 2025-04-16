@@ -8,6 +8,7 @@ import com.example.splitwallet.models.Group;
 import com.example.splitwallet.models.JWTtoken;
 import com.example.splitwallet.models.LoginRequest;
 import com.example.splitwallet.models.RegisterRequest;
+import com.example.splitwallet.models.UpdateExpenseRequest;
 import com.example.splitwallet.models.User;
 import com.example.splitwallet.models.UserResponse;
 
@@ -16,9 +17,11 @@ import java.util.List;
 
 import retrofit2.Call;
 import retrofit2.http.Body;
+import retrofit2.http.DELETE;
 import retrofit2.http.GET;
 import retrofit2.http.Header;
 import retrofit2.http.POST;
+import retrofit2.http.PUT;
 import retrofit2.http.Path;
 import retrofit2.http.Query;
 
@@ -49,6 +52,21 @@ public interface ApiService {
     @GET("groups/{groupId}/expenses")
     Call<List<Expense>> getGroupExpenses(
             @Path("groupId") Long groupId,
+            @Header("Authorization") String authToken
+    );
+
+    @PUT("groups/{groupId}/expenses/{expenseId}")
+    Call<Expense> updateExpense(
+            @Path("groupId") Long groupId,
+            @Path("expenseId") Long expenseId,
+            @Header("Authorization") String authToken,
+            @Body UpdateExpenseRequest request
+    );
+
+    @DELETE("groups/{groupId}/expenses/{expenseId}")
+    Call<Void> deleteExpense(
+            @Path("groupId") Long groupId,
+            @Path("expenseId") Long expenseId,
             @Header("Authorization") String authToken
     );
 
