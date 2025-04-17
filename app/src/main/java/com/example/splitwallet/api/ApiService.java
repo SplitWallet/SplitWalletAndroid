@@ -72,7 +72,7 @@ public interface ApiService {
     );
 
     @GET("groups/{groupId}/members")
-    Call<List<UserResponse>> getGroupMembers(
+    Call<List<User>> getGroupMembers(
             @Path("groupId") Long groupId,
             @Header("Authorization") String authToken
     );

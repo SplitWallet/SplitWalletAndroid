@@ -103,7 +103,7 @@ public class ExpensesFragment extends Fragment {
         });
 
         // Загрузка данных
-        loadExpenses();
+        //loadExpenses();
 
         // Наблюдатели LiveData
         expenseViewModel.getExpensesLiveData().observe(getViewLifecycleOwner(), expenses -> {
@@ -112,6 +112,16 @@ public class ExpensesFragment extends Fragment {
                 emptyView.setVisibility(expenses.isEmpty() ? View.VISIBLE : View.GONE);
             }
         });
+
+        expenseViewModel.getGroupMembersMap().observe(getViewLifecycleOwner(), membersMap -> {
+            adapter.setMembersMap(membersMap);
+            adapter.notifyDataSetChanged();
+        });
+
+        String token = getAuthToken();
+        if (token != null) {
+            expenseViewModel.loadExpensesWithMembers(groupId, token);
+        }
 
         expenseViewModel.getErrorLiveData().observe(getViewLifecycleOwner(), error -> {
             if (error != null) {

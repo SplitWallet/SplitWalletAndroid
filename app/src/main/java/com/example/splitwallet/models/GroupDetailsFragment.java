@@ -86,6 +86,14 @@ public class GroupDetailsFragment extends Fragment {
         if (token != null) {
             groupViewModel.loadGroupMembers(groupId, token);
         }
+
+        groupViewModel.getGroupMembersLiveData().observe(getViewLifecycleOwner(), members -> {
+            if (members != null) {
+                adapter.updateMembers(members);
+            } else {
+                Toast.makeText(getContext(), "Failed to load members", Toast.LENGTH_SHORT).show();
+            }
+        });
     }
 
     private String getAuthToken() {
