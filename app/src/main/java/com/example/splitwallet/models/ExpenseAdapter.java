@@ -54,6 +54,14 @@ public class ExpenseAdapter extends ListAdapter<Expense, ExpenseAdapter.ExpenseV
             binding.tvDate.setText(expense.getDate().toString());
             binding.tvDescription.setText(expense.getDescription());
 
+            // Добавляем информацию о создателе
+            if (expense.getUserWhoCreatedId() != null) {
+                binding.tvCreatedBy.setText(String.format("Добавил: %s",
+                        expense.getUserWhoCreatedId()));
+            } else {
+                binding.tvCreatedBy.setText("Добавил: Неизвестно");
+            }
+
             itemView.setOnClickListener(v -> {
                 if (listener != null) {
                     listener.onExpenseClick(expense);

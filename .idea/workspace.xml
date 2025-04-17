@@ -106,9 +106,12 @@
     <option name="autoReloadType" value="NONE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="7e1d5d40-dcab-4242-96df-5e61b088e4fb" name="Changes" comment="qr code scanner added">
-      <change beforePath="$PROJECT_DIR$/app/src/main/java/com/example/splitwallet/models/ExpensesFragment.java" beforeDir="false" afterPath="$PROJECT_DIR$/app/src/main/java/com/example/splitwallet/models/ExpensesFragment.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/app/src/main/java/com/example/splitwallet/repository/ExpenseRepository.java" beforeDir="false" afterPath="$PROJECT_DIR$/app/src/main/java/com/example/splitwallet/repository/ExpenseRepository.java" afterDir="false" />
+    <list default="true" id="7e1d5d40-dcab-4242-96df-5e61b088e4fb" name="Changes" comment="token fixes">
+      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/src/main/java/com/example/splitwallet/models/Expense.java" beforeDir="false" afterPath="$PROJECT_DIR$/app/src/main/java/com/example/splitwallet/models/Expense.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/src/main/java/com/example/splitwallet/models/ExpenseAdapter.java" beforeDir="false" afterPath="$PROJECT_DIR$/app/src/main/java/com/example/splitwallet/models/ExpenseAdapter.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/src/main/res/layout/item_expense.xml" beforeDir="false" afterPath="$PROJECT_DIR$/app/src/main/res/layout/item_expense.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/src/main/res/values/colors.xml" beforeDir="false" afterPath="$PROJECT_DIR$/app/src/main/res/values/colors.xml" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -347,7 +350,15 @@
       <option name="project" value="LOCAL" />
       <updated>1744459044879</updated>
     </task>
-    <option name="localTasksCounter" value="5" />
+    <task id="LOCAL-00005" summary="token fixes">
+      <option name="closed" value="true" />
+      <created>1744886204242</created>
+      <option name="number" value="00005" />
+      <option name="presentableId" value="LOCAL-00005" />
+      <option name="project" value="LOCAL" />
+      <updated>1744886204242</updated>
+    </task>
+    <option name="localTasksCounter" value="6" />
     <servers />
   </component>
   <component name="Vcs.Log.Tabs.Properties">
@@ -366,19 +377,20 @@
     <MESSAGE value="branches merged, group management added" />
     <MESSAGE value="added different menus for group details and expenses" />
     <MESSAGE value="qr code scanner added" />
-    <option name="LAST_COMMIT_MESSAGE" value="qr code scanner added" />
+    <MESSAGE value="token fixes" />
+    <option name="LAST_COMMIT_MESSAGE" value="token fixes" />
   </component>
   <component name="play_dynamic_filters_status">
     <option name="appIdToCheckInfo">
       <map>
         <entry key="com.example.splitwallet">
           <value>
-            <CheckInfo lastCheckTimestamp="1744449638801" />
+            <CheckInfo lastCheckTimestamp="1744886252023" />
           </value>
         </entry>
         <entry key="com.example.splitwallet.test">
           <value>
-            <CheckInfo lastCheckTimestamp="1744449638798" />
+            <CheckInfo lastCheckTimestamp="1744886252031" />
           </value>
         </entry>
       </map>

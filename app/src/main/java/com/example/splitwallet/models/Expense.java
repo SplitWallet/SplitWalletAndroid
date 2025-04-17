@@ -22,5 +22,6 @@ public class Expense {
     private Boolean isActive;
     private Long groupId;
     private Double currentUserPaid;
+
 }
 
