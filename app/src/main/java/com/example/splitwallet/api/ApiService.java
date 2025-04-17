@@ -44,6 +44,7 @@ public interface ApiService {
             @Header("Authorization") String authToken,
             @Body CreateExpenseRequest request
     );
+
     @GET("groups/my")
     Call<List<Group>> getUserGroups(
             @Header("Authorization") String authToken

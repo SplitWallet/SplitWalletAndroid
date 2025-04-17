@@ -9,8 +9,10 @@ import com.example.splitwallet.api.RetrofitClient;
 import com.example.splitwallet.models.CreateGroupRequest;
 import com.example.splitwallet.models.Group;
 import com.example.splitwallet.models.JWTtoken;
+
 import android.content.SharedPreferences;
 import android.util.Log;
+
 import com.example.splitwallet.models.UserResponse;
 
 import java.util.List;

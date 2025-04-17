@@ -107,15 +107,8 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="7e1d5d40-dcab-4242-96df-5e61b088e4fb" name="Changes" comment="qr code scanner added">
-      <change afterPath="$PROJECT_DIR$/app/src/main/java/com/example/splitwallet/models/ExpenseCallback.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/app/src/main/java/com/example/splitwallet/models/ExpensesCallback.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/app/src/main/java/com/example/splitwallet/models/UpdateExpenseRequest.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/app/src/main/java/com/example/splitwallet/api/ApiService.java" beforeDir="false" afterPath="$PROJECT_DIR$/app/src/main/java/com/example/splitwallet/api/ApiService.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/app/src/main/java/com/example/splitwallet/models/ExpenseAdapter.java" beforeDir="false" afterPath="$PROJECT_DIR$/app/src/main/java/com/example/splitwallet/models/ExpenseAdapter.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/app/src/main/java/com/example/splitwallet/models/ExpensesFragment.java" beforeDir="false" afterPath="$PROJECT_DIR$/app/src/main/java/com/example/splitwallet/models/ExpensesFragment.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/app/src/main/java/com/example/splitwallet/repository/ExpenseRepository.java" beforeDir="false" afterPath="$PROJECT_DIR$/app/src/main/java/com/example/splitwallet/repository/ExpenseRepository.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/app/src/main/java/com/example/splitwallet/viewmodels/ExpenseViewModel.java" beforeDir="false" afterPath="$PROJECT_DIR$/app/src/main/java/com/example/splitwallet/viewmodels/ExpenseViewModel.java" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -187,6 +180,7 @@
       </map>
     </option>
     <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$" />
+    <option name="RESET_MODE" value="HARD" />
   </component>
   <component name="GitHubPullRequestSearchHistory">{
   &quot;lastFilter&quot;: {

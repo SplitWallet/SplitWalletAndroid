@@ -13,6 +13,7 @@ import com.example.splitwallet.databinding.ItemExpenseBinding;
 
 public class ExpenseAdapter extends ListAdapter<Expense, ExpenseAdapter.ExpenseViewHolder> {
     private static OnExpenseClickListener listener;
+
     public interface OnExpenseClickListener {
         void onExpenseClick(Expense expense);
     }
@@ -60,6 +61,7 @@ public class ExpenseAdapter extends ListAdapter<Expense, ExpenseAdapter.ExpenseV
             });
         }
     }
+
     private static final DiffUtil.ItemCallback<Expense> DIFF_CALLBACK =
             new DiffUtil.ItemCallback<Expense>() {
                 @Override

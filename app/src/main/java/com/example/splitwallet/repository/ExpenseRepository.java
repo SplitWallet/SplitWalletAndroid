@@ -42,7 +42,7 @@ public class ExpenseRepository {
     }
 
     public void getExpenses(Long groupId, String token, ExpensesCallback callback) {
-        Call<List<Expense>> call = apiService.getGroupExpenses(groupId, token);
+        Call<List<Expense>> call = apiService.getGroupExpenses(groupId, "Bearer " + token);
         call.enqueue(new Callback<List<Expense>>() {
             @Override
             public void onResponse(Call<List<Expense>> call, Response<List<Expense>> response) {
@@ -63,6 +63,7 @@ public class ExpenseRepository {
             }
         });
     }
+
     public void createExpenseWithConversion(Long groupId, CreateExpenseRequest request,
                                             String token, MutableLiveData<Expense> result) {
 
@@ -84,6 +85,7 @@ public class ExpenseRepository {
             }
         });
     }
+
     public void createExpense(Long groupId, CreateExpenseRequest request, String token,
                               MutableLiveData<Expense> expenseLiveData) {
 
@@ -100,7 +102,8 @@ public class ExpenseRepository {
                         Log.e("API_ERROR", "Error body: " + response.errorBody().string());
                     } catch (IOException e) {
                         e.printStackTrace();
-                    }                }
+                    }
+                }
             }
 
             @Override
@@ -114,7 +117,7 @@ public class ExpenseRepository {
     public void updateExpense(Long groupId, Long expenseId,
                               UpdateExpenseRequest request, String token,
                               ExpenseCallback callback) {
-        Call<Expense> call = apiService.updateExpense(groupId, expenseId, "Bearer "+ token, request);
+        Call<Expense> call = apiService.updateExpense(groupId, expenseId, "Bearer " + token, request);
         call.enqueue(new Callback<Expense>() {
             @Override
             public void onResponse(Call<Expense> call, Response<Expense> response) {
@@ -163,11 +166,13 @@ public class ExpenseRepository {
 
     public interface ExpensesCallback {
         void onSuccess(List<Expense> expenses);
+
         void onError(String error);
     }
 
     public interface ExpenseCallback {
         void onSuccess(Expense expense);
+
         void onError(String error);
     }
 }

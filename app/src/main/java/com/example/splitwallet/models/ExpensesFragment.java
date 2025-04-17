@@ -128,7 +128,7 @@ public class ExpensesFragment extends Fragment {
         swipeRefreshLayout.setRefreshing(true);
         String token = getAuthToken();
         if (token != null) {
-            expenseViewModel.loadExpenses(groupId, "Bearer " + token);
+            expenseViewModel.loadExpenses(groupId, token);
         }
 
         expenseViewModel.getExpensesLiveData().observe(getViewLifecycleOwner(), expenses -> {
@@ -364,6 +364,7 @@ public class ExpensesFragment extends Fragment {
             Toast.makeText(requireContext(), "QR scanner not available", Toast.LENGTH_SHORT).show();
         }
     }
+
     // Обработка результата сканирования
     @Override
     public void onActivityResult(int requestCode, int resultCode, Intent data) {

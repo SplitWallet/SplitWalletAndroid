@@ -22,6 +22,7 @@ public class ExpenseViewModel extends ViewModel {
     public LiveData<Expense> getNewExpenseLiveData() {
         return newExpenseLiveData;
     }
+
     public LiveData<List<Expense>> getExpensesLiveData() {
         return expensesLiveData;
     }
@@ -50,9 +51,10 @@ public class ExpenseViewModel extends ViewModel {
     }
 
     public void createExpenseWithConversion(Long groupId, CreateExpenseRequest request,
-                                            String token){
+                                            String token) {
         expenseRepository.createExpenseWithConversion(groupId, request, token, newExpenseLiveData);
     }
+
     public void updateExpense(Long groupId, Long expenseId,
                               UpdateExpenseRequest request, String token) {
         expenseRepository.updateExpense(groupId, expenseId, request, token,
@@ -69,6 +71,7 @@ public class ExpenseViewModel extends ViewModel {
                     }
                 });
     }
+
     public void deleteExpense(Long groupId, Long expenseId, String token) {
         expenseRepository.deleteExpense(groupId, expenseId, token,
                 new ExpenseRepository.ExpenseCallback() {
