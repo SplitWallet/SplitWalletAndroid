@@ -41,7 +41,7 @@ public class JoinGroupActivity extends AppCompatActivity {
 
         joinButton.setOnClickListener(v -> {
             String code = codeInput.getText().toString();
-            if (code.length() != 6 || !TextUtils.isDigitsOnly(code) || code.equals("000000")) {
+            if (code.length() != 6 || TextUtils.isDigitsOnly(code) || code.equals("000000")) {
                 Toast.makeText(this, "Попробуйте ввести код ещё раз", Toast.LENGTH_SHORT).show();
                 return;
             }
