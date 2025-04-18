@@ -62,7 +62,7 @@ public class GroupViewModel extends ViewModel {
         for (User user : users) {
             responses.add(new UserResponse(
                     user.getId(),
-                    user.getName(),
+                    user.getUsername(),
                     user.getEmail(),
                     user.getPhoneNumber()
             ));

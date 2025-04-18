@@ -65,8 +65,8 @@ public class ExpenseAdapter extends ListAdapter<Expense, ExpenseAdapter.ExpenseV
                 Log.d("DEBUG", "Available IDs: " + membersMap.keySet());
                 User creator = membersMap.get(expense.getUserWhoCreatedId());
                 Log.d("USER_DEBUG", "Creator object: " + creator); // Проверьте весь объект
-                Log.d("USER_DEBUG", "Creator name: " + (creator != null ? creator.getName() : "null"));
-                String creatorName = creator != null ? creator.getName() : "ID: " + expense.getUserWhoCreatedId();
+                Log.d("USER_DEBUG", "Creator name: " + (creator != null ? creator.getUsername() : "null"));
+                String creatorName = creator != null ? creator.getUsername() : "ID: " + expense.getUserWhoCreatedId();
                 binding.tvCreatedBy.setText(String.format("Добавил: %s", creatorName));
             } else {
                 binding.tvCreatedBy.setText("Добавил: Неизвестно");

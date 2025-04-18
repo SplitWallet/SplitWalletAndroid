@@ -8,17 +8,19 @@ import lombok.Getter;
 public class User {
     @SerializedName("id")
     private String id;
-    @SerializedName("name")
-    private String name;
+
+    @SerializedName("username")
+    private String username;
+
     private String email;
     private String phoneNumber;
 
     public User() {}
 
 
-    public User(String id, String name, String email, String phoneNumber) {
+    public User(String id, String username, String email, String phoneNumber) {
         this.id = id;
-        this.name = name;
+        this.username = this.username;
         this.email = email;
         this.phoneNumber = phoneNumber;
     }
