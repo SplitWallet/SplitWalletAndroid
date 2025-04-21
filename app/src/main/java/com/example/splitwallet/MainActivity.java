@@ -1,19 +1,24 @@
 package com.example.splitwallet;
 
 import com.example.splitwallet.models.Group;
+import com.example.splitwallet.ui.GroupExpensesActivity;
 import com.example.splitwallet.ui.GroupDetailsActivity;
+import com.example.splitwallet.ui.GroupPagerActivity;
 import com.example.splitwallet.ui.JoinGroupActivity;
 import com.example.splitwallet.ui.LoginActivity;
 
 import android.content.Context;
 import android.content.SharedPreferences;
 import android.os.Bundle;
+import android.os.Handler;
 import android.util.Log;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.Menu;
 import android.content.Intent;
+import android.view.ViewGroup;
 import android.widget.EditText;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import com.example.splitwallet.viewmodels.GroupViewModel;
@@ -143,6 +148,20 @@ public class MainActivity extends AppCompatActivity {
 //            return NavigationUI.onNavDestinationSelected(item, navController)
 //                    || super.onOptionsItemSelected(item);
 //        });
+
+        groupViewModel.getGroupDeleted().observe(this, deleted -> {
+            if (deleted != null && deleted) {
+                Toast.makeText(this, "Группа удалена", Toast.LENGTH_SHORT).show();
+
+                // Обновим список после удаления
+                //SharedPreferences sharedPreferences = getSharedPreferences("auth", MODE_PRIVATE);
+                String token_ = sharedPreferences.getString("token", null);
+                if (token_ != null) {
+                    loadUserGroups(token_);
+                }
+            }
+        });
+
     }
 
     @Override
@@ -221,22 +240,97 @@ public class MainActivity extends AppCompatActivity {
         groupViewModel.loadUserGroups(token);
     }
 
+//    private void updateGroupsMenu(List<Group> groups) {
+//        NavigationView navigationView = binding.navView;
+//        Menu menu = navigationView.getMenu();
+//
+//        // Очищаем старые группы
+//        menu.removeGroup(R.id.nav_group_list);
+//
+//        // Добавляем новые группы
+//        for (Group group : groups) {
+//            menu.add(R.id.nav_group_list, Menu.NONE, Menu.NONE, group.getName())
+//                    .setIcon(R.drawable.ic_group_icon)
+//                    .setOnMenuItemClickListener(item -> {
+//                        openGroupExpenses(group.getId()); // TODO: сделать другой способ открытия GroupDetailsActivity
+//                        return true;
+//                    });
+//        }
+//    }
+
     private void updateGroupsMenu(List<Group> groups) {
         NavigationView navigationView = binding.navView;
         Menu menu = navigationView.getMenu();
 
-        // Очищаем старые группы
+        // Удаляем старые группы
         menu.removeGroup(R.id.nav_group_list);
 
-        // Добавляем новые группы
         for (Group group : groups) {
-            menu.add(R.id.nav_group_list, Menu.NONE, Menu.NONE, group.getName())
-                    .setIcon(R.drawable.ic_group_icon)
-                    .setOnMenuItemClickListener(item -> {
-                        openGroupDetails(group.getId());
-                        return true;
-                    });
+            MenuItem item = menu.add(R.id.nav_group_list, Menu.NONE, Menu.NONE, group.getName())
+                    .setIcon(R.drawable.ic_group_icon);
+
+            // Обычный клик — открыть
+            item.setOnMenuItemClickListener(menuItem -> {
+                openGroupExpenses(group.getId());
+                return true;
+            });
+
+            // Длинный клик — удалить (непосредственно повесим позже)
         }
+
+        // 🛠 Задержка нужна, чтобы NavigationView успел отрисовать меню
+        new Handler().postDelayed(() -> {
+            for (int i = 0; i < navigationView.getChildCount(); i++) {
+                View view = navigationView.getChildAt(i);
+
+                if (view instanceof ViewGroup) {
+                    findAndHookLongClicks((ViewGroup) view, groups);
+                }
+            }
+        }, 100);
+    }
+
+    private void findAndHookLongClicks(ViewGroup parent, List<Group> groups) {
+        for (int i = 0; i < parent.getChildCount(); i++) {
+            View child = parent.getChildAt(i);
+            if (child instanceof ViewGroup) {
+                findAndHookLongClicks((ViewGroup) child, groups);
+            } else if (child instanceof TextView) {
+                TextView textView = (TextView) child;
+                String name = textView.getText().toString();
+
+                for (Group group : groups) {
+                    if (group.getName().equals(name)) {
+
+                        // Обычный клик — открытие группы
+                        textView.setOnClickListener(v -> openGroupExpenses(group.getId()));
+
+                        // Долгий клик — удаление
+                        textView.setOnLongClickListener(v -> {
+                            showDeleteGroupDialog(group);
+                            return true; // важно вернуть true
+                        });
+
+                        break;
+                    }
+                }
+            }
+        }
+    }
+
+    private void showDeleteGroupDialog(Group group) {
+        new AlertDialog.Builder(this)
+                .setTitle("Удалить группу?")
+                .setMessage("Вы уверены, что хотите удалить группу \"" + group.getName() + "\"?")
+                .setPositiveButton("Удалить", (dialog, which) -> {
+                    SharedPreferences sharedPreferences = getSharedPreferences("auth", MODE_PRIVATE);
+                    String token = sharedPreferences.getString("token", null);
+                    if (token != null) {
+                        groupViewModel.deleteGroup(group.getId(), token);
+                    }
+                })
+                .setNegativeButton("Отмена", null)
+                .show();
     }
 
     private void openGroupDetails(Long groupId) {
@@ -260,6 +354,25 @@ public class MainActivity extends AppCompatActivity {
         // 3. Запускаем Activity
         startActivity(intent);
     }
+    private void openGroupExpenses(Long groupId) {
+        // Получаем название группы
+        String groupName = "";
+        List<Group> groups = groupViewModel.getUserGroupsLiveData().getValue();
+        if (groups != null) {
+            for (Group group : groups) {
+                if (group.getId().equals(groupId)) {
+                    groupName = group.getName();
+                    break;
+                }
+            }
+        }
+
+        Intent intent = new Intent(this, GroupPagerActivity.class);
+        intent.putExtra("GROUP_ID", groupId);
+        intent.putExtra("GROUP_NAME", groupName);
+        startActivity(intent);
+    }
+
     private void showCreateGroupDialog() {
         SharedPreferences sharedPreferences = getSharedPreferences("auth", MODE_PRIVATE);
         String token = sharedPreferences.getString("token", null);
@@ -293,23 +406,24 @@ public class MainActivity extends AppCompatActivity {
         menu.add(R.id.nav_group_list, Menu.NONE, Menu.NONE, group.getName()).setIcon(R.drawable.ic_group_icon)
                 .setOnMenuItemClickListener(item -> {
                     Toast.makeText(this, "Opening group: " + group.getName(), Toast.LENGTH_SHORT).show();
+                    openGroupExpenses(group.getId());
                     return true;
                 });
     }
 
-
-    private final ActivityResultLauncher<Intent> joinGroupLauncher = registerForActivityResult(
-            new ActivityResultContracts.StartActivityForResult(),
-            result -> {
-                if (result.getResultCode() == RESULT_OK) {
-                    // Пользователь присоединился к группе — обновляем меню
-                    String token = getSharedPreferences("auth", MODE_PRIVATE).getString("token", null);
+    private void showDeleteGroupDialog(Long groupId, String groupName) {
+        new AlertDialog.Builder(this)
+                .setTitle("Удалить группу")
+                .setMessage("Вы уверены, что хотите удалить \"" + groupName + "\"?")
+                .setPositiveButton("Удалить", (dialog, which) -> {
+                    SharedPreferences sharedPreferences = getSharedPreferences("auth", MODE_PRIVATE);
+                    String token = sharedPreferences.getString("token", null);
                     if (token != null) {
-                        loadUserGroups(token);
+                        groupViewModel.deleteGroup(groupId, token); // Добавим этот метод ниже
                     }
-                }
-            }
-    );
-
+                })
+                .setNegativeButton("Отмена", null)
+                .show();
+    }
 
 }
