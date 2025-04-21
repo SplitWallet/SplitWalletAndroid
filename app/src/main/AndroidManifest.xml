@@ -1,6 +1,10 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools">
+
+    <uses-feature
+        android:name="android.hardware.camera"
+        android:required="false" />
     <uses-permission android:name="android.permission.INTERNET" />
 
     <application
@@ -9,8 +13,8 @@
         android:dataExtractionRules="@xml/data_extraction_rules"
         android:fullBackupContent="@xml/backup_rules"
         android:icon="@mipmap/ic_launcher_1"
-        android:roundIcon="@mipmap/ic_launcher_1_round"
         android:label="@string/app_name"
+        android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
         android:theme="@style/Theme.SplitWallet"
         tools:targetApi="31">
@@ -57,11 +61,17 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
+
         <activity
             android:name=".ui.GroupExpensesActivity"
             android:theme="@style/Theme.SplitWallet.NoActionBar"
             android:parentActivityName=".MainActivity">
         </activity>
+        <activity
+            android:name=".ui.GroupPagerActivity"
+            android:exported="false"
+            android:theme="@style/AppTheme" />
     </application>
-
+    <uses-permission android:name="android.permission.CAMERA"
+        tools:ignore="ManifestOrder" />
 </manifest>
