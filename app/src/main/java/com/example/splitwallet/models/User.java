@@ -24,4 +24,8 @@ public class User {
         this.email = email;
         this.phoneNumber = phoneNumber;
     }
+
+    public String getName() {
+        return this.username;
+    }
 }

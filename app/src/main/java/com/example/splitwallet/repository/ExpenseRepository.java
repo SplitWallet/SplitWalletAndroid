@@ -11,6 +11,7 @@ import com.example.splitwallet.models.CreateGroupRequest;
 import com.example.splitwallet.models.CurrencyConverter;
 import com.example.splitwallet.models.Expense;
 import com.example.splitwallet.models.ExpenseCallback;
+import com.example.splitwallet.models.ExpenseUser;
 import com.example.splitwallet.models.ExpensesCallback;
 import com.example.splitwallet.models.Group;
 import com.example.splitwallet.models.JWTtoken;
@@ -163,7 +164,23 @@ public class ExpenseRepository {
             }
         });
     }
+    public void getExpenseUsers(Long groupId, Long expenseId, String token,
+                                Callback<List<ExpenseUser>> callback) {
+        apiService.getExpenseUsers(groupId, expenseId, "Bearer " + token)
+                .enqueue(callback);
+    }
 
+    public void updateExpenseUsers(Long groupId, Long expenseId, String token,
+                                   List<ExpenseUser> expenseUsers, Callback<List<ExpenseUser>> callback) {
+        apiService.updateExpenseUsers(groupId, expenseId, "Bearer " + token, expenseUsers)
+                .enqueue(callback);
+    }
+
+    public void removeUserFromExpense(Long groupId, Long expenseId, String userId,
+                                      String token, Callback<Void> callback) {
+        apiService.removeUserFromExpense(groupId, expenseId, userId, "Bearer " + token)
+                .enqueue(callback);
+    }
     public interface ExpensesCallback {
         void onSuccess(List<Expense> expenses);
 

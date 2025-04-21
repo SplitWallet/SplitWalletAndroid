@@ -104,7 +104,7 @@ public class GroupDetailsFragment extends Fragment {
             startActivity(new Intent(getActivity(), LoginActivity.class));
             requireActivity().finish();
         }
-        return "Bearer " + token;
+        return token;
     }
 
     private void onMemberClick(UserResponse member) {

@@ -48,6 +48,7 @@ dependencies {
     implementation(libs.navigation.ui)
     implementation(libs.activity)
     implementation(libs.swiperefreshlayout)
+    implementation(libs.recyclerview)
     testImplementation(libs.junit)
     androidTestImplementation(libs.ext.junit)
     androidTestImplementation(libs.espresso.core)
@@ -79,4 +80,5 @@ dependencies {
     implementation ("com.google.android.material:material:1.6.0")
     implementation ("com.journeyapps:zxing-android-embedded:4.3.0")
     implementation ("com.github.clans:fab:1.6.4")
+    implementation ("androidx.recyclerview:recyclerview:1.3.2")
 }

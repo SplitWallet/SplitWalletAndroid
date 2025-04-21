@@ -50,6 +50,11 @@
           <theme>@style/Theme.SplitWallet</theme>
         </config>
       </layout>
+      <layout url="file://$PROJECT_DIR$/app/src/main/res/layout/dialog_expense_settings.xml">
+        <config>
+          <theme>@style/Theme.SplitWallet</theme>
+        </config>
+      </layout>
       <layout url="file://$PROJECT_DIR$/app/src/main/res/layout/fragment_expenses.xml">
         <config>
           <theme>@style/Theme.SplitWallet</theme>
@@ -66,6 +71,11 @@
         </config>
       </layout>
       <layout url="file://$PROJECT_DIR$/app/src/main/res/layout/item_member.xml">
+        <config>
+          <theme>@style/Theme.SplitWallet</theme>
+        </config>
+      </layout>
+      <layout url="file://$PROJECT_DIR$/app/src/main/res/layout/item_participant_distribution.xml">
         <config>
           <theme>@style/Theme.SplitWallet</theme>
         </config>
@@ -106,17 +116,20 @@
     <option name="autoReloadType" value="NONE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="7e1d5d40-dcab-4242-96df-5e61b088e4fb" name="Changes" comment="expense description changed">
+    <list default="true" id="7e1d5d40-dcab-4242-96df-5e61b088e4fb" name="Changes" comment="added creator name in expense description">
+      <change afterPath="$PROJECT_DIR$/app/src/main/java/com/example/splitwallet/models/ParticipantDistributionAdapter.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/app/src/main/res/layout/dialog_expense_settings.xml" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/app/src/main/res/layout/item_participant_distribution.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/build.gradle.kts" beforeDir="false" afterPath="$PROJECT_DIR$/app/build.gradle.kts" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/app/src/main/java/com/example/splitwallet/api/ApiService.java" beforeDir="false" afterPath="$PROJECT_DIR$/app/src/main/java/com/example/splitwallet/api/ApiService.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/app/src/main/java/com/example/splitwallet/models/ExpenseAdapter.java" beforeDir="false" afterPath="$PROJECT_DIR$/app/src/main/java/com/example/splitwallet/models/ExpenseAdapter.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/src/main/java/com/example/splitwallet/models/ExpenseUser.java" beforeDir="false" afterPath="$PROJECT_DIR$/app/src/main/java/com/example/splitwallet/models/ExpenseUser.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/app/src/main/java/com/example/splitwallet/models/ExpensesFragment.java" beforeDir="false" afterPath="$PROJECT_DIR$/app/src/main/java/com/example/splitwallet/models/ExpensesFragment.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/app/src/main/java/com/example/splitwallet/models/GroupDetailsFragment.java" beforeDir="false" afterPath="$PROJECT_DIR$/app/src/main/java/com/example/splitwallet/models/GroupDetailsFragment.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/app/src/main/java/com/example/splitwallet/models/User.java" beforeDir="false" afterPath="$PROJECT_DIR$/app/src/main/java/com/example/splitwallet/models/User.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/app/src/main/java/com/example/splitwallet/models/UserResponse.java" beforeDir="false" afterPath="$PROJECT_DIR$/app/src/main/java/com/example/splitwallet/models/UserResponse.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/app/src/main/java/com/example/splitwallet/repository/GroupRepository.java" beforeDir="false" afterPath="$PROJECT_DIR$/app/src/main/java/com/example/splitwallet/repository/GroupRepository.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/src/main/java/com/example/splitwallet/repository/ExpenseRepository.java" beforeDir="false" afterPath="$PROJECT_DIR$/app/src/main/java/com/example/splitwallet/repository/ExpenseRepository.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/app/src/main/java/com/example/splitwallet/viewmodels/ExpenseViewModel.java" beforeDir="false" afterPath="$PROJECT_DIR$/app/src/main/java/com/example/splitwallet/viewmodels/ExpenseViewModel.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/app/src/main/java/com/example/splitwallet/viewmodels/GroupViewModel.java" beforeDir="false" afterPath="$PROJECT_DIR$/app/src/main/java/com/example/splitwallet/viewmodels/GroupViewModel.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/src/main/res/layout/dialog_add_expense.xml" beforeDir="false" afterPath="$PROJECT_DIR$/app/src/main/res/layout/dialog_add_expense.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/gradle/libs.versions.toml" beforeDir="false" afterPath="$PROJECT_DIR$/gradle/libs.versions.toml" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -174,10 +187,10 @@
     <option name="RECENT_TEMPLATES">
       <list>
         <option value="valueResourceFile" />
-        <option value="layoutResourceFile" />
         <option value="resourceFile" />
         <option value="Interface" />
         <option value="Class" />
+        <option value="layoutResourceFile" />
       </list>
     </option>
   </component>
@@ -371,7 +384,15 @@
       <option name="project" value="LOCAL" />
       <updated>1744886821803</updated>
     </task>
-    <option name="localTasksCounter" value="7" />
+    <task id="LOCAL-00007" summary="added creator name in expense description">
+      <option name="closed" value="true" />
+      <created>1744897143782</created>
+      <option name="number" value="00007" />
+      <option name="presentableId" value="LOCAL-00007" />
+      <option name="project" value="LOCAL" />
+      <updated>1744897143782</updated>
+    </task>
+    <option name="localTasksCounter" value="8" />
     <servers />
   </component>
   <component name="Vcs.Log.Tabs.Properties">
@@ -392,7 +413,8 @@
     <MESSAGE value="qr code scanner added" />
     <MESSAGE value="token fixes" />
     <MESSAGE value="expense description changed" />
-    <option name="LAST_COMMIT_MESSAGE" value="expense description changed" />
+    <MESSAGE value="added creator name in expense description" />
+    <option name="LAST_COMMIT_MESSAGE" value="added creator name in expense description" />
   </component>
   <component name="play_dynamic_filters_status">
     <option name="appIdToCheckInfo">
