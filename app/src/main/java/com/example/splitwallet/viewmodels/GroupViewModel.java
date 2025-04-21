@@ -12,6 +12,7 @@ import com.example.splitwallet.models.User;
 import com.example.splitwallet.repository.GroupRepository;
 import com.example.splitwallet.models.UserResponse;
 
+import java.util.ArrayList;
 import java.util.List;
 
 public class GroupViewModel extends ViewModel {
@@ -42,8 +43,32 @@ public class GroupViewModel extends ViewModel {
     }
 
     public void loadGroupMembers(Long groupId, String token) {
-        groupRepository.getGroupMembers(groupId, token, groupMembersLiveData);
+        groupRepository.getGroupMembers(groupId, token, new GroupRepository.MembersCallback() {
+            @Override
+            public void onSuccess(List<User> members) {
+                List<UserResponse> userResponses = convertUsersToResponses(members);
+                groupMembersLiveData.postValue(userResponses);
+            }
+
+            @Override
+            public void onError(String error) {
+                errorLiveData.postValue(error);
+            }
+        });
     }
+    private List<UserResponse> convertUsersToResponses(List<User> users) {
+        List<UserResponse> responses = new ArrayList<>();
+        for (User user : users) {
+            responses.add(new UserResponse(
+                    user.getId(),
+                    user.getUsername(),
+                    user.getEmail(),
+                    user.getPhoneNumber()
+            ));
+        }
+        return responses;
+    }
+
 
     // Метод для установки токена
     public void setToken(JWTtoken token) {
@@ -64,4 +89,14 @@ public class GroupViewModel extends ViewModel {
                 token  // Получаем строку токена
         );
     }
+
+    private MutableLiveData<Boolean> groupDeleted = new MutableLiveData<>();
+    public LiveData<Boolean> getGroupDeleted() {
+        return groupDeleted;
+    }
+
+    public void deleteGroup(Long groupId, String token) {
+        groupRepository.deleteGroup(groupId, token, groupDeleted);
+    }
+
 }
