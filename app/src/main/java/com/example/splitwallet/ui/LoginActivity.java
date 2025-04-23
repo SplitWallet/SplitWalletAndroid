@@ -12,6 +12,7 @@ import androidx.lifecycle.ViewModelProvider;
 
 import com.example.splitwallet.MainActivity;
 import com.example.splitwallet.R;
+import com.example.splitwallet.models.AuthTokenHolder;
 import com.example.splitwallet.viewmodels.LoginViewModel;
 
 public class LoginActivity extends AppCompatActivity {
@@ -51,6 +52,7 @@ public class LoginActivity extends AppCompatActivity {
             if (token != null) {
                 // Сохраняем токен в SharedPreferences
                 saveToken(token.getJwtToken());
+                AuthTokenHolder.setToken(token.getJwtToken());
                 startActivity(new Intent(this, MainActivity.class));
                 finish(); // Закрыть LoginActivity
             } else {
