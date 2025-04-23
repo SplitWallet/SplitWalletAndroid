@@ -28,6 +28,10 @@ public class GroupRepository {
         void onSuccess(List<User> members);
         void onError(String error);
     }
+    public interface LeaveGroupCallback {
+        void onResponse(boolean success, int code);
+    }
+
     private ApiService apiService;
 
     public GroupRepository() {
@@ -127,6 +131,22 @@ public class GroupRepository {
             }
         });
     }
+
+    public void leaveGroup(Long groupId, String userId, String token, LeaveGroupCallback callback) {
+        Call<Void> call = apiService.leaveGroup(groupId, userId, "Bearer " + token);
+        call.enqueue(new Callback<Void>() {
+            @Override
+            public void onResponse(Call<Void> call, Response<Void> response) {
+                callback.onResponse(response.isSuccessful(), response.code());
+            }
+
+            @Override
+            public void onFailure(Call<Void> call, Throwable t) {
+                callback.onResponse(false, -1);
+            }
+        });
+    }
+
 
 
 }
