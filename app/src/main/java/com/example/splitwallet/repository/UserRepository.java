@@ -1,5 +1,6 @@
 package com.example.splitwallet.repository;
 
+import android.content.SharedPreferences;
 import android.util.Log;
 
 import androidx.lifecycle.MutableLiveData;
@@ -11,6 +12,7 @@ import com.example.splitwallet.models.RegisterRequest;
 import com.example.splitwallet.models.JWTtoken;
 import com.google.gson.Gson;
 import com.google.gson.JsonObject;
+import com.google.gson.JsonParser;
 
 import retrofit2.Call;
 import retrofit2.Callback;
@@ -45,6 +47,21 @@ public class UserRepository {
             }
         });
     }
+
+    public static String extractUserIdFromJwt(String jwtToken) {
+        try {
+            String[] parts = jwtToken.split("\\.");
+            if (parts.length >= 2) {
+                String payloadJson = new String(android.util.Base64.decode(parts[1], android.util.Base64.URL_SAFE));
+                JsonObject payload = JsonParser.parseString(payloadJson).getAsJsonObject();
+                return payload.get("sub").getAsString();
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return null;
+    }
+
 
     public void register(String name, String email, String password, MutableLiveData<JWTtoken> TokenLiveData) {
         Call<JWTtoken> call = apiService.register(new RegisterRequest(name, email, password));
