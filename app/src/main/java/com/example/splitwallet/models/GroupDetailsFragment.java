@@ -5,6 +5,7 @@ import static android.content.Context.MODE_PRIVATE;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -25,6 +26,9 @@ import com.example.splitwallet.ui.MemberDetailsActivity;
 import com.example.splitwallet.ui.MembersAdapter;
 import com.example.splitwallet.utils.InviteCodeUtil;
 import com.example.splitwallet.viewmodels.GroupViewModel;
+import com.example.splitwallet.models.AuthTokenHolder;
+
+import java.util.Objects;
 
 public class GroupDetailsFragment extends Fragment {
     private Long groupId;
@@ -49,6 +53,8 @@ public class GroupDetailsFragment extends Fragment {
             groupName = getArguments().getString("groupName");
         }
         groupViewModel = new ViewModelProvider(this).get(GroupViewModel.class);
+
+
     }
 
     @Override
@@ -77,6 +83,23 @@ public class GroupDetailsFragment extends Fragment {
 
         btnInvite.setOnClickListener(v -> showInviteDialog());
         btnLeaveGroup.setOnClickListener(v -> showLeaveGroupDialog());
+
+        groupViewModel.getLeftGroupLiveData().observe(getViewLifecycleOwner(), success -> {
+            if (success != null && success) {
+                String token = getAuthToken();
+                groupViewModel.loadGroupMembers(groupId, token); // Обновим участников
+            } else {
+                int code = groupViewModel.getLastLeaveGroupResponseCode();
+                String message;
+
+                switch (code) {
+                    case 400: message = "Владелец группы не может её покинуть"; break;
+                    case 500: message = "Внутренняя ошибка сервера"; break;
+                    default:  message = "Ошибка выхода из группы"; break;
+                }
+                Toast.makeText(getContext(), message, Toast.LENGTH_SHORT).show();
+            }
+        });
 
         return view;
     }
@@ -126,13 +149,40 @@ public class GroupDetailsFragment extends Fragment {
     private void showLeaveGroupDialog() {
         new AlertDialog.Builder(requireContext())
                 .setTitle("Leave Group")
-                .setMessage("Are you sure?")
+                .setMessage("Are you sure you want to leave this group?")
                 .setPositiveButton("Leave", (dialog, which) -> {
-                    // TODO: Реализовать выход из группы
-                    Toast.makeText(getContext(), "Left the group", Toast.LENGTH_SHORT).show();
-                    requireActivity().onBackPressed();
+                    String token = getAuthToken();
+                    String userId = getCurrentUserId(); // из SharedPreferences
+                    Log.d("TAG_", userId);
+                    if (token != null && userId != null && !userId.isEmpty()) {
+                        groupViewModel.leaveGroup(groupId, userId, token);
+                    }
                 })
                 .setNegativeButton("Cancel", null)
                 .show();
     }
+
+    private String getCurrentUserId() {
+        String token = AuthTokenHolder.getToken();
+        //SharedPreferences sharedPreferences = requireActivity().getSharedPreferences("auth", MODE_PRIVATE);
+        Log.d("TAG_", Objects.requireNonNull(this.extractUserIdFromJwt(token)));
+        return this.extractUserIdFromJwt(token); // Вернёт UUID как строку
+    }
+
+
+    private String extractUserIdFromJwt(String jwtToken) {
+        try {
+            String[] parts = jwtToken.split("\\.");
+            if (parts.length >= 2) {
+                String payloadJson = new String(android.util.Base64.decode(parts[1], android.util.Base64.URL_SAFE));
+                org.json.JSONObject payload = new org.json.JSONObject(payloadJson);
+                return payload.getString("sub"); // userId
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return null;
+    }
+
+
 }
