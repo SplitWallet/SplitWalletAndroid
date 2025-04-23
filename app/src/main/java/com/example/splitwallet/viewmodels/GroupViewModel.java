@@ -15,6 +15,8 @@ import com.example.splitwallet.models.UserResponse;
 import java.util.ArrayList;
 import java.util.List;
 
+import lombok.Getter;
+
 public class GroupViewModel extends ViewModel {
     private GroupRepository groupRepository = new GroupRepository();
     public MutableLiveData<Group> groupLiveData = new MutableLiveData<>();
@@ -38,6 +40,9 @@ public class GroupViewModel extends ViewModel {
     public LiveData<String> getErrorLiveData() {
         return errorLiveData;
     }
+    @Getter
+    private int lastLeaveGroupResponseCode = -1;
+
     public void loadUserGroups(String token) {
         groupRepository.getUserGroups(token, userGroupsLiveData);
     }
@@ -97,6 +102,18 @@ public class GroupViewModel extends ViewModel {
 
     public void deleteGroup(Long groupId, String token) {
         groupRepository.deleteGroup(groupId, token, groupDeleted);
+    }
+
+    private final MutableLiveData<Boolean> leftGroupLiveData = new MutableLiveData<>();
+    public LiveData<Boolean> getLeftGroupLiveData() {
+        return leftGroupLiveData;
+    }
+
+    public void leaveGroup(Long groupId, String userId, String token) {
+        groupRepository.leaveGroup(groupId, userId, token, (success, code) -> {
+            lastLeaveGroupResponseCode = code;
+            leftGroupLiveData.postValue(success);
+        });
     }
 
 }
