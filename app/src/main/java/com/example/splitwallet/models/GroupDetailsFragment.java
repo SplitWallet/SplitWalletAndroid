@@ -11,6 +11,7 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.Toast;
+import android.content.SharedPreferences;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -26,7 +27,6 @@ import com.example.splitwallet.ui.MemberDetailsActivity;
 import com.example.splitwallet.ui.MembersAdapter;
 import com.example.splitwallet.utils.InviteCodeUtil;
 import com.example.splitwallet.viewmodels.GroupViewModel;
-import com.example.splitwallet.models.AuthTokenHolder;
 
 import java.util.Objects;
 
@@ -163,8 +163,8 @@ public class GroupDetailsFragment extends Fragment {
     }
 
     private String getCurrentUserId() {
-        String token = AuthTokenHolder.getToken();
-        //SharedPreferences sharedPreferences = requireActivity().getSharedPreferences("auth", MODE_PRIVATE);
+        SharedPreferences sharedPreferences = requireActivity().getSharedPreferences("auth", MODE_PRIVATE);
+        String token = sharedPreferences.getString("token", null);
         Log.d("TAG_", Objects.requireNonNull(this.extractUserIdFromJwt(token)));
         return this.extractUserIdFromJwt(token); // Вернёт UUID как строку
     }
