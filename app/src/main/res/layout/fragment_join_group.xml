@@ -20,11 +20,9 @@
         android:layout_height="wrap_content"
         android:maxLength="6" />
 
-
     <Button
         android:id="@+id/join_button"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:text="Join group" />
-
-    </LinearLayout>
+</LinearLayout>
