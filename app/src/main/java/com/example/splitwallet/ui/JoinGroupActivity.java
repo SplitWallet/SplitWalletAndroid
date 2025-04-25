@@ -50,12 +50,6 @@ public class JoinGroupActivity extends AppCompatActivity {
 
     }
 
-//    private String generateJoinCode(String groupId) {
-//        int hash = groupId.hashCode();
-//        int code = Math.abs(hash) % 1000000;
-//        return String.format("%06d", code);
-//    }
-
     private void joinGroupByCode(String code, String token) {
         Long groupId;
         try {
