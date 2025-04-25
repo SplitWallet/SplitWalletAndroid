@@ -1,6 +1,8 @@
 package com.example.splitwallet;
 
 import com.example.splitwallet.models.Group;
+import com.example.splitwallet.models.JoinGroupFragment;
+import com.example.splitwallet.ui.GroupExpensesActivity;
 import com.example.splitwallet.ui.GroupDetailsActivity;
 import com.example.splitwallet.ui.GroupPagerActivity;
 import com.example.splitwallet.ui.JoinGroupActivity;
@@ -11,7 +13,6 @@ import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.os.Handler;
 import android.util.Log;
-import android.util.Pair;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.Menu;
@@ -22,8 +23,12 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import com.example.splitwallet.viewmodels.GroupViewModel;
+import com.google.android.material.snackbar.Snackbar;
 import com.google.android.material.navigation.NavigationView;
 
+import androidx.activity.result.ActivityResultLauncher;
+import androidx.activity.result.contract.ActivityResultContracts;
+import androidx.annotation.NonNull;
 import androidx.appcompat.app.AlertDialog;
 import androidx.lifecycle.ViewModelProvider;
 import androidx.navigation.NavController;
@@ -34,8 +39,6 @@ import androidx.drawerlayout.widget.DrawerLayout;
 import androidx.appcompat.app.AppCompatActivity;
 
 import com.example.splitwallet.databinding.ActivityMainBinding;
-
-import org.json.JSONObject;
 
 import java.util.List;
 
@@ -69,23 +72,6 @@ public class MainActivity extends AppCompatActivity {
         });
         DrawerLayout drawer = binding.drawerLayout;
         NavigationView navigationView = binding.navView;
-        View headerView = navigationView.getHeaderView(0);
-
-        // Находим TextView
-        TextView usernameView = headerView.findViewById(R.id.nav_header_username);
-        TextView emailView = headerView.findViewById(R.id.nav_header_email);
-
-        SharedPreferences sharedPreferences = getSharedPreferences("auth", MODE_PRIVATE);
-        String token = sharedPreferences.getString("token", null);
-
-        if (token != null) {
-            Pair<String, String> userData = parseJwt(token); // логин, email
-            if (userData != null) {
-                usernameView.setText(userData.first);
-                emailView.setText(userData.second);
-            }
-        }
-
         mAppBarConfiguration = new AppBarConfiguration.Builder(
                 R.id.nav_home, R.id.nav_gallery, R.id.nav_slideshow)
                 .setOpenableLayout(drawer)
@@ -105,11 +91,22 @@ public class MainActivity extends AppCompatActivity {
             }
 
             if (id == R.id.nav_join_group) {
+                SharedPreferences sharedPreferences = getSharedPreferences("auth", MODE_PRIVATE);
+                String token = sharedPreferences.getString("token", null);
+
                 Intent intent = new Intent(MainActivity.this, JoinGroupActivity.class);
                 intent.putExtra("TOKEN", token); // <-- передаём токен
                 startActivity(intent);
                 return true;
             }
+//            if (id == R.id.nav_join_group) {
+//                getSupportFragmentManager()
+//                        .beginTransaction()
+//                        .replace(R.id.fragment_container, new JoinGroupFragment()) // обязательно укажи id контейнера
+//                        .addToBackStack(null) // чтобы можно было вернуться
+//                        .commit();
+//                return true;
+//            }
 
             // Группы
             if (item.getGroupId() == R.id.nav_group_list) {
@@ -133,8 +130,8 @@ public class MainActivity extends AppCompatActivity {
             }
         });
 
-        //SharedPreferences sharedPreferences = getSharedPreferences("auth", MODE_PRIVATE);
-        //String token = sharedPreferences.getString("token", null);
+        SharedPreferences sharedPreferences = getSharedPreferences("auth", MODE_PRIVATE);
+        String token = sharedPreferences.getString("token", null);
         if (token != null) {
             loadUserGroups(token);
         }
@@ -150,13 +147,26 @@ public class MainActivity extends AppCompatActivity {
             }
         });
 
+//        // Обновляем обработчик меню
+//        navigationView.setNavigationItemSelectedListener(item -> {
+//            if (item.getItemId() == R.id.nav_create_group) {
+//                showCreateGroupDialog();
+//                return true;
+//            }
+//            // Обработка выхода остается без изменений
+//            return NavigationUI.onNavDestinationSelected(item, navController)
+//                    || super.onOptionsItemSelected(item);
+//        });
+
         groupViewModel.getGroupDeleted().observe(this, deleted -> {
             if (deleted != null && deleted) {
                 Toast.makeText(this, "Группа удалена", Toast.LENGTH_SHORT).show();
 
                 // Обновим список после удаления
-                if (token != null) {
-                    loadUserGroups(token);
+                //SharedPreferences sharedPreferences = getSharedPreferences("auth", MODE_PRIVATE);
+                String token_ = sharedPreferences.getString("token", null);
+                if (token_ != null) {
+                    loadUserGroups(token_);
                 }
             }
         });
@@ -238,7 +248,7 @@ public class MainActivity extends AppCompatActivity {
     private void loadUserGroups(String token) {
         groupViewModel.loadUserGroups(token);
     }
-    
+
     private void updateGroupsMenu(List<Group> groups) {
         NavigationView navigationView = binding.navView;
         Menu menu = navigationView.getMenu();
@@ -256,7 +266,7 @@ public class MainActivity extends AppCompatActivity {
                 return true;
             });
 
-            // Длинный клик — удалить
+            // Длинный клик — удалить (непосредственно повесим позже)
         }
 
         // Задержка нужна, чтобы NavigationView успел отрисовать меню
@@ -405,24 +415,6 @@ public class MainActivity extends AppCompatActivity {
                 })
                 .setNegativeButton("Отмена", null)
                 .show();
-    }
-
-    private Pair<String, String> parseJwt(String jwt) {
-        try {
-            String[] parts = jwt.split("\\.");
-            if (parts.length != 3) return null;
-
-            String payload = new String(android.util.Base64.decode(parts[1], android.util.Base64.URL_SAFE));
-            JSONObject json = new JSONObject(payload);
-
-            String username = json.optString("preferred_username", "Unknown");
-            String email = json.optString("email", "No email");
-
-            return new Pair<>(username, email);
-        } catch (Exception e) {
-            e.printStackTrace();
-            return null;
-        }
     }
 
 }
