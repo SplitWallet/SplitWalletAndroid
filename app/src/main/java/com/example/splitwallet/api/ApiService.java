@@ -106,4 +106,17 @@ public interface ApiService {
             @Path("userId") String userId,
             @Header("Authorization") String authToken
     );
+
+    @DELETE("groups/{id}")
+    Call<Void> deleteGroup(
+            @Header("Authorization") String token,
+            @Path("id") Long groupId
+    );
+
+    @DELETE("groups/{groupId}/members/{userId}")
+    Call<Void> leaveGroup(
+            @Path("groupId") Long groupId,
+            @Path("userId") String userId,
+            @Header("Authorization") String token
+    );
 }
