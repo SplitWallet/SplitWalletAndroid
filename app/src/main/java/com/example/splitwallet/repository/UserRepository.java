@@ -19,13 +19,14 @@ import retrofit2.Response;
 public class UserRepository {
     private final ApiService apiService;
     private final Gson gson = new Gson();
+
     public UserRepository() {
         apiService = RetrofitClient.getRetrofitInstance().create(ApiService.class);
     }
 
     public void login(String login, String password, MutableLiveData<JWTtoken> tokenLiveData) {
         Call<JWTtoken> call = apiService.login(new LoginRequest(login, password));
-        call.enqueue(new Callback<>() {
+        call.enqueue(new Callback<JWTtoken>() {
             @Override
             public void onResponse(Call<JWTtoken> call, Response<JWTtoken> response) {
                 if (response.isSuccessful() && response.body() != null) {
@@ -33,36 +34,38 @@ public class UserRepository {
                     JWTtoken token = gson.fromJson(jsonObject, JWTtoken.class);
                     tokenLiveData.setValue(token);
                 } else {
-                    Log.e("API_ERROR", "Ошибка: " + response.code() + " - " + response.message());
+                    Log.e("API_ERROR", "Login error: " + response.code() + " - " + response.message());
                     tokenLiveData.setValue(null);
                 }
             }
 
             @Override
             public void onFailure(Call<JWTtoken> call, Throwable t) {
-                Log.e("API_FAILURE", "Ошибка сети: " + t.getMessage());
+                Log.e("API_FAILURE", "Login network error: " + t.getMessage());
                 tokenLiveData.setValue(null);
             }
         });
     }
 
-    public void register(String name, String email, String password, MutableLiveData<JWTtoken> TokenLiveData) {
+    public void register(String name, String email, String password, MutableLiveData<JWTtoken> tokenLiveData) {
         Call<JWTtoken> call = apiService.register(new RegisterRequest(name, email, password));
-        call.enqueue(new Callback<>() {
+        call.enqueue(new Callback<JWTtoken>() {
             @Override
             public void onResponse(Call<JWTtoken> call, Response<JWTtoken> response) {
                 if (response.isSuccessful() && response.body() != null) {
                     JsonObject jsonObject = gson.toJsonTree(response.body()).getAsJsonObject();
                     JWTtoken token = gson.fromJson(jsonObject, JWTtoken.class);
-                    TokenLiveData.setValue(token);
+                    tokenLiveData.setValue(token);
                 } else {
-                    TokenLiveData.setValue(null);
+                    Log.e("API_ERROR", "Register error: " + response.code() + " - " + response.message());
+                    tokenLiveData.setValue(null);
                 }
             }
 
             @Override
             public void onFailure(Call<JWTtoken> call, Throwable t) {
-                TokenLiveData.setValue(null);
+                Log.e("API_FAILURE", "Register network error: " + t.getMessage());
+                tokenLiveData.setValue(null);
             }
         });
     }

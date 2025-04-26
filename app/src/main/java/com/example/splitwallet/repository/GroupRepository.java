@@ -1,20 +1,15 @@
 package com.example.splitwallet.repository;
 
-import android.content.SharedPreferences;
-
 import androidx.lifecycle.MutableLiveData;
 
 import com.example.splitwallet.api.ApiService;
 import com.example.splitwallet.api.RetrofitClient;
 import com.example.splitwallet.models.CreateGroupRequest;
 import com.example.splitwallet.models.Group;
-import com.example.splitwallet.models.JWTtoken;
-
-import android.content.SharedPreferences;
-import android.util.Log;
-
 import com.example.splitwallet.models.User;
 import com.example.splitwallet.models.UserResponse;
+
+import android.util.Log;
 
 import java.io.IOException;
 import java.util.List;
@@ -28,16 +23,19 @@ public class GroupRepository {
         void onSuccess(List<User> members);
         void onError(String error);
     }
-    private ApiService apiService;
+
+    public interface LeaveGroupCallback {
+        void onResponse(boolean success, int code);
+    }
+
+    private final ApiService apiService;
+    private final MutableLiveData<List<UserResponse>> groupMembersLiveData = new MutableLiveData<>();
 
     public GroupRepository() {
         apiService = RetrofitClient.getRetrofitInstance().create(ApiService.class);
     }
 
-    private MutableLiveData<List<UserResponse>> groupMembersLiveData = new MutableLiveData<>();
-
     public void createGroup(String name, MutableLiveData<Group> groupLiveData, String token) {
-
         Call<Group> call = apiService.createGroup("Bearer " + token, new CreateGroupRequest(name));
         call.enqueue(new Callback<Group>() {
             @Override
@@ -84,7 +82,7 @@ public class GroupRepository {
     }
 
     public void getGroupMembers(Long groupId, String token, MembersCallback callback) {
-        Call<List<User>> call = apiService.getGroupMembers(groupId,"Bearer " + token);
+        Call<List<User>> call = apiService.getGroupMembers(groupId, "Bearer " + token);
         call.enqueue(new Callback<List<User>>() {
             @Override
             public void onResponse(Call<List<User>> call, Response<List<User>> response) {
@@ -102,6 +100,41 @@ public class GroupRepository {
             @Override
             public void onFailure(Call<List<User>> call, Throwable t) {
                 callback.onError("Network error: " + t.getMessage());
+            }
+        });
+    }
+
+    // Методы из второй версии
+    public void deleteGroup(Long groupId, String token, MutableLiveData<Boolean> resultLiveData) {
+        Call<Void> call = apiService.deleteGroup("Bearer " + token, groupId);
+        call.enqueue(new Callback<Void>() {
+            @Override
+            public void onResponse(Call<Void> call, Response<Void> response) {
+                resultLiveData.postValue(response.isSuccessful());
+                if (!response.isSuccessful()) {
+                    Log.e("GroupRepository", "Delete failed: " + response.code());
+                }
+            }
+
+            @Override
+            public void onFailure(Call<Void> call, Throwable t) {
+                Log.e("GroupRepository", "Delete error: " + t.getMessage());
+                resultLiveData.postValue(false);
+            }
+        });
+    }
+
+    public void leaveGroup(Long groupId, String userId, String token, LeaveGroupCallback callback) {
+        Call<Void> call = apiService.leaveGroup(groupId, userId, "Bearer " + token);
+        call.enqueue(new Callback<Void>() {
+            @Override
+            public void onResponse(Call<Void> call, Response<Void> response) {
+                callback.onResponse(response.isSuccessful(), response.code());
+            }
+
+            @Override
+            public void onFailure(Call<Void> call, Throwable t) {
+                callback.onResponse(false, -1);
             }
         });
     }
