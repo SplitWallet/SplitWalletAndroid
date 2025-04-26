@@ -11,7 +11,6 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.Toast;
-import android.content.SharedPreferences;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -53,8 +52,6 @@ public class GroupDetailsFragment extends Fragment {
             groupName = getArguments().getString("groupName");
         }
         groupViewModel = new ViewModelProvider(this).get(GroupViewModel.class);
-
-
     }
 
     @Override
@@ -73,29 +70,26 @@ public class GroupDetailsFragment extends Fragment {
 
         loadGroupMembers();
 
-        groupViewModel.getGroupMembersLiveData().observe(getViewLifecycleOwner(), members -> {
-            if (members != null) {
-                adapter.updateMembers(members);
-            } else {
-                Toast.makeText(getContext(), "Failed to load members", Toast.LENGTH_SHORT).show();
-            }
-        });
-
         btnInvite.setOnClickListener(v -> showInviteDialog());
         btnLeaveGroup.setOnClickListener(v -> showLeaveGroupDialog());
 
         groupViewModel.getLeftGroupLiveData().observe(getViewLifecycleOwner(), success -> {
             if (success != null && success) {
-                String token = getAuthToken();
-                groupViewModel.loadGroupMembers(groupId, token); // Обновим участников
+                requireActivity().onBackPressed();
             } else {
                 int code = groupViewModel.getLastLeaveGroupResponseCode();
                 String message;
 
                 switch (code) {
-                    case 400: message = "Владелец группы не может её покинуть"; break;
-                    case 500: message = "Внутренняя ошибка сервера"; break;
-                    default:  message = "Ошибка выхода из группы"; break;
+                    case 400:
+                        message = "Владелец группы не может её покинуть";
+                        break;
+                    case 500:
+                        message = "Внутренняя ошибка сервера";
+                        break;
+                    default:
+                        message = "Ошибка выхода из группы";
+                        break;
                 }
                 Toast.makeText(getContext(), message, Toast.LENGTH_SHORT).show();
             }
@@ -108,16 +102,16 @@ public class GroupDetailsFragment extends Fragment {
         String token = getAuthToken();
         if (token != null) {
             groupViewModel.loadGroupMembers(groupId, token);
+            groupViewModel.getGroupMembersLiveData().observe(getViewLifecycleOwner(), members -> {
+                if (members != null) {
+                    adapter.updateMembers(members);
+                } else {
+                    Toast.makeText(getContext(), "Ошибка загрузки участников", Toast.LENGTH_SHORT).show();
+                }
+            });
         }
-
-        groupViewModel.getGroupMembersLiveData().observe(getViewLifecycleOwner(), members -> {
-            if (members != null) {
-                adapter.updateMembers(members);
-            } else {
-                Toast.makeText(getContext(), "Failed to load members", Toast.LENGTH_SHORT).show();
-            }
-        });
     }
+
 
     private String getAuthToken() {
         SharedPreferences sharedPreferences = requireActivity().getSharedPreferences("auth", MODE_PRIVATE);
@@ -152,8 +146,7 @@ public class GroupDetailsFragment extends Fragment {
                 .setMessage("Are you sure you want to leave this group?")
                 .setPositiveButton("Leave", (dialog, which) -> {
                     String token = getAuthToken();
-                    String userId = getCurrentUserId(); // из SharedPreferences
-                    Log.d("TAG_", userId);
+                    String userId = getCurrentUserId();
                     if (token != null && userId != null && !userId.isEmpty()) {
                         groupViewModel.leaveGroup(groupId, userId, token);
                     }
@@ -165,24 +158,23 @@ public class GroupDetailsFragment extends Fragment {
     private String getCurrentUserId() {
         SharedPreferences sharedPreferences = requireActivity().getSharedPreferences("auth", MODE_PRIVATE);
         String token = sharedPreferences.getString("token", null);
-        Log.d("TAG_", Objects.requireNonNull(this.extractUserIdFromJwt(token)));
-        return this.extractUserIdFromJwt(token); // Вернёт UUID как строку
+        return extractUserIdFromJwt(token);
     }
-
 
     private String extractUserIdFromJwt(String jwtToken) {
         try {
+            if (jwtToken == null) return null;
+
             String[] parts = jwtToken.split("\\.");
             if (parts.length >= 2) {
-                String payloadJson = new String(android.util.Base64.decode(parts[1], android.util.Base64.URL_SAFE));
+                String payloadJson = new String(
+                        android.util.Base64.decode(parts[1], android.util.Base64.URL_SAFE));
                 org.json.JSONObject payload = new org.json.JSONObject(payloadJson);
-                return payload.getString("sub"); // userId
+                return payload.getString("sub");
             }
         } catch (Exception e) {
-            e.printStackTrace();
+            Log.e("JWT_ERROR", "Error extracting user ID from token", e);
         }
         return null;
     }
-
-
 }
