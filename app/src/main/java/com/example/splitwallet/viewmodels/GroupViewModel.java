@@ -18,17 +18,21 @@ import java.util.List;
 import lombok.Getter;
 
 public class GroupViewModel extends ViewModel {
-    private GroupRepository groupRepository = new GroupRepository();
-    public MutableLiveData<Group> groupLiveData = new MutableLiveData<>();
+    private final GroupRepository groupRepository = new GroupRepository();
 
-    private MutableLiveData<List<Group>> userGroupsLiveData = new MutableLiveData<>();
-    // Добавляем LiveData для токена
+    // LiveData объекты
+    public MutableLiveData<Group> groupLiveData = new MutableLiveData<>();
+    private final MutableLiveData<List<Group>> userGroupsLiveData = new MutableLiveData<>();
+    private final MutableLiveData<List<UserResponse>> groupMembersLiveData = new MutableLiveData<>();
+    private final MutableLiveData<String> errorLiveData = new MutableLiveData<>();
+    private final MutableLiveData<Boolean> groupDeleted = new MutableLiveData<>();
+    private final MutableLiveData<Boolean> leftGroupLiveData = new MutableLiveData<>();
     private MutableLiveData<JWTtoken> tokenLiveData;
 
-    private MutableLiveData<List<UserResponse>> groupMembersLiveData = new MutableLiveData<>();
+    @Getter
+    private int lastLeaveGroupResponseCode = -1;
 
-    private MutableLiveData<String> errorLiveData = new MutableLiveData<>();
-
+    // Геттеры для LiveData
     public LiveData<List<Group>> getUserGroupsLiveData() {
         return userGroupsLiveData;
     }
@@ -40,9 +44,16 @@ public class GroupViewModel extends ViewModel {
     public LiveData<String> getErrorLiveData() {
         return errorLiveData;
     }
-    @Getter
-    private int lastLeaveGroupResponseCode = -1;
 
+    public LiveData<Boolean> getGroupDeleted() {
+        return groupDeleted;
+    }
+
+    public LiveData<Boolean> getLeftGroupLiveData() {
+        return leftGroupLiveData;
+    }
+
+    // Методы работы с группами
     public void loadUserGroups(String token) {
         groupRepository.getUserGroups(token, userGroupsLiveData);
     }
@@ -61,6 +72,27 @@ public class GroupViewModel extends ViewModel {
             }
         });
     }
+
+    public void createGroup(String name, String token) {
+        if (token == null) {
+            Log.e("GroupViewModel", "No token provided for createGroup");
+            return;
+        }
+        groupRepository.createGroup(name, groupLiveData, token);
+    }
+
+    public void deleteGroup(Long groupId, String token) {
+        groupRepository.deleteGroup(groupId, token, groupDeleted);
+    }
+
+    public void leaveGroup(Long groupId, String userId, String token) {
+        groupRepository.leaveGroup(groupId, userId, token, (success, code) -> {
+            lastLeaveGroupResponseCode = code;
+            leftGroupLiveData.postValue(success);
+        });
+    }
+
+    // Вспомогательные методы
     private List<UserResponse> convertUsersToResponses(List<User> users) {
         List<UserResponse> responses = new ArrayList<>();
         for (User user : users) {
@@ -74,46 +106,10 @@ public class GroupViewModel extends ViewModel {
         return responses;
     }
 
-
-    // Метод для установки токена
     public void setToken(JWTtoken token) {
         if (tokenLiveData == null) {
             tokenLiveData = new MutableLiveData<>();
         }
         tokenLiveData.setValue(token);
     }
-
-    public void createGroup(String name, String token) {
-        if (token == null) {
-            System.out.println("no token!!!");
-            return;
-        }
-        groupRepository.createGroup(
-                name,
-                groupLiveData,
-                token  // Получаем строку токена
-        );
-    }
-
-    private MutableLiveData<Boolean> groupDeleted = new MutableLiveData<>();
-    public LiveData<Boolean> getGroupDeleted() {
-        return groupDeleted;
-    }
-
-    public void deleteGroup(Long groupId, String token) {
-        groupRepository.deleteGroup(groupId, token, groupDeleted);
-    }
-
-    private final MutableLiveData<Boolean> leftGroupLiveData = new MutableLiveData<>();
-    public LiveData<Boolean> getLeftGroupLiveData() {
-        return leftGroupLiveData;
-    }
-
-    public void leaveGroup(Long groupId, String userId, String token) {
-        groupRepository.leaveGroup(groupId, userId, token, (success, code) -> {
-            lastLeaveGroupResponseCode = code;
-            leftGroupLiveData.postValue(success);
-        });
-    }
-
 }

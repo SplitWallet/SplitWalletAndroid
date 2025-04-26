@@ -6,6 +6,7 @@ import androidx.lifecycle.ViewModel;
 
 import com.example.splitwallet.models.CreateExpenseRequest;
 import com.example.splitwallet.models.Expense;
+import com.example.splitwallet.models.ExpenseUser;
 import com.example.splitwallet.models.ExpensesCallback;
 import com.example.splitwallet.models.UpdateExpenseRequest;
 import com.example.splitwallet.models.User;
@@ -16,6 +17,10 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import retrofit2.Call;
+import retrofit2.Callback;
+import retrofit2.Response;
+
 public class ExpenseViewModel extends ViewModel {
     private final ExpenseRepository expenseRepository = new ExpenseRepository();
     private final MutableLiveData<List<Expense>> expensesLiveData = new MutableLiveData<>();
@@ -23,6 +28,7 @@ public class ExpenseViewModel extends ViewModel {
     private final MutableLiveData<Expense> newExpenseLiveData = new MutableLiveData<>();
     private final MutableLiveData<Map<String, User>> groupMembersMap = new MutableLiveData<>();
     private final GroupRepository groupRepository = new GroupRepository();
+    private MutableLiveData<List<ExpenseUser>> expenseUsersLiveData = new MutableLiveData<>();
 
 
     public LiveData<Expense> getNewExpenseLiveData() {
@@ -36,6 +42,9 @@ public class ExpenseViewModel extends ViewModel {
 
     public LiveData<String> getErrorLiveData() {
         return errorLiveData;
+    }
+    public LiveData<List<ExpenseUser>> getExpenseUsersLiveData() {
+        return expenseUsersLiveData;
     }
 
     public void loadExpenses(Long groupId, String token) {
@@ -125,5 +134,39 @@ public class ExpenseViewModel extends ViewModel {
                         errorLiveData.postValue(error);
                     }
                 });
+    }
+
+    public void loadExpenseUsers(Long groupId, Long expenseId, String token) {
+        expenseRepository.getExpenseUsers(groupId, expenseId, token, new Callback<List<ExpenseUser>>() {
+            @Override
+            public void onResponse(Call<List<ExpenseUser>> call, Response<List<ExpenseUser>> response) {
+                if (response.isSuccessful()) {
+                    expenseUsersLiveData.postValue(response.body());
+                }
+            }
+
+            @Override
+            public void onFailure(Call<List<ExpenseUser>> call, Throwable t) {
+                // Обработка ошибки
+            }
+        });
+    }
+
+
+
+    public void updateExpenseUsers(Long groupId, Long expenseId, String token, List<ExpenseUser> updatedDistribution) {
+        expenseRepository.updateExpenseUsers(groupId, expenseId, token, updatedDistribution, new Callback<List<ExpenseUser>>() {
+            @Override
+            public void onResponse(Call<List<ExpenseUser>> call, Response<List<ExpenseUser>> response) {
+                if (response.isSuccessful()) {
+                    expenseUsersLiveData.postValue(response.body());
+                }
+            }
+
+            @Override
+            public void onFailure(Call<List<ExpenseUser>> call, Throwable t) {
+                // Обработка ошибки
+            }
+        });
     }
 }
