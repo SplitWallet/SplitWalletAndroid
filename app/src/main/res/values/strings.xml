@@ -23,4 +23,6 @@
     <string name="owner">Owner: %s</string>
     <string name="error_load_group">Failed to load group details</string>
     <string name="invalid_auth">Invalid group or authentication</string>
+    <string name="join_group">Join Group</string>
+    <string name="create_group">Create Group</string>
 </resources>
