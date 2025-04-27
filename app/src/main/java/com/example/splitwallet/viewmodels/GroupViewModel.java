@@ -31,6 +31,9 @@ public class GroupViewModel extends ViewModel {
 
     @Getter
     private int lastLeaveGroupResponseCode = -1;
+    // Добавляем поле для хранения последнего кода ответа
+    @Getter
+    private int lastDeleteResponseCode = -1;
 
     // Геттеры для LiveData
     public LiveData<List<Group>> getUserGroupsLiveData() {
@@ -81,8 +84,22 @@ public class GroupViewModel extends ViewModel {
         groupRepository.createGroup(name, groupLiveData, token);
     }
 
+    public void resetDeleteStatus() {
+        groupDeleted.setValue(null);
+    }
+
+//    public void deleteGroup(Long groupId, String token) {
+//        groupRepository.deleteGroup(groupId, token, groupDeleted);
+//    }
+
     public void deleteGroup(Long groupId, String token) {
-        groupRepository.deleteGroup(groupId, token, groupDeleted);
+        groupRepository.deleteGroup(groupId, token, new GroupRepository.DeleteCallback() {
+            @Override
+            public void onResponse(boolean success, int code) {
+                lastDeleteResponseCode = code;
+                groupDeleted.postValue(success);
+            }
+        });
     }
 
     public void leaveGroup(Long groupId, String userId, String token) {
