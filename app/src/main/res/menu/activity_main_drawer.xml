@@ -11,11 +11,13 @@
         <item
             android:id="@+id/nav_create_group"
             android:icon="@drawable/ic_menu_group_add"
-            android:title="Create Group" />
+            android:title="@string/create_group" />
 
         <item
             android:id="@+id/nav_join_group"
-            android:title="Join Group"
+            android:title="@string/join_group"
             android:icon="@drawable/ic_menu_join_group"/>
     </group>
+
+    <group android:id="@+id/nav_dynamic_groups" />
 </menu>
