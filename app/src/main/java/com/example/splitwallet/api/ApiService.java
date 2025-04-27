@@ -4,6 +4,7 @@ package com.example.splitwallet.api;
 import com.example.splitwallet.models.CreateExpenseRequest;
 import com.example.splitwallet.models.CreateGroupRequest;
 import com.example.splitwallet.models.Expense;
+import com.example.splitwallet.models.ExpenseUser;
 import com.example.splitwallet.models.Group;
 import com.example.splitwallet.models.JWTtoken;
 import com.example.splitwallet.models.LoginRequest;
@@ -83,6 +84,29 @@ public interface ApiService {
             @Header("Authorization") String authToken
     );
 
+    @GET("groups/{groupId}/expenses/{expenseId}/users")
+    Call<List<ExpenseUser>> getExpenseUsers(
+            @Path("groupId") Long groupId,
+            @Path("expenseId") Long expenseId,
+            @Header("Authorization") String authToken
+    );
+
+    @PUT("groups/{groupId}/expenses/{expenseId}/users")
+    Call<List<ExpenseUser>> updateExpenseUsers(
+            @Path("groupId") Long groupId,
+            @Path("expenseId") Long expenseId,
+            @Header("Authorization") String authToken,
+            @Body List<ExpenseUser> expenseUsers
+    );
+
+    @DELETE("groups/{groupId}/expenses/{expenseId}/users/{userId}")
+    Call<Void> removeUserFromExpense(
+            @Path("groupId") Long groupId,
+            @Path("expenseId") Long expenseId,
+            @Path("userId") String userId,
+            @Header("Authorization") String authToken
+    );
+
     @DELETE("groups/{id}")
     Call<Void> deleteGroup(
             @Header("Authorization") String token,
@@ -95,5 +119,4 @@ public interface ApiService {
             @Path("userId") String userId,
             @Header("Authorization") String token
     );
-
 }
