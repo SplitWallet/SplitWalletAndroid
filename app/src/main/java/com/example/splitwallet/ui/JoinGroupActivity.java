@@ -51,15 +51,15 @@ public class JoinGroupActivity extends AppCompatActivity {
     }
 
     private void joinGroupByCode(String code, String token) {
-        Long groupId;
-        try {
-            groupId = InviteCodeUtil.decode(code); // декодер
-        } catch (Exception e) {
-            Toast.makeText(this, "Неверный формат кода", Toast.LENGTH_SHORT).show();
-            return;
-        }
+//        Long groupId;
+//        try {
+//            groupId = InviteCodeUtil.decode(code); // декодер
+//        } catch (Exception e) {
+//            Toast.makeText(this, "Неверный формат кода", Toast.LENGTH_SHORT).show();
+//            return;
+//        }
 
-        apiService.joinGroup(groupId, token).enqueue(new Callback<Void>() {
+        apiService.joinGroup(code, token).enqueue(new Callback<Void>() {
             @Override
             public void onResponse(Call<Void> call, Response<Void> response) {
                 if (response.isSuccessful()) {
