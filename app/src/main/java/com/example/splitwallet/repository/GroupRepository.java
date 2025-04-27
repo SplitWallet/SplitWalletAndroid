@@ -104,22 +104,41 @@ public class GroupRepository {
         });
     }
 
-    // Методы из второй версии
-    public void deleteGroup(Long groupId, String token, MutableLiveData<Boolean> resultLiveData) {
+//
+//    public void deleteGroup(Long groupId, String token, MutableLiveData<Boolean> resultLiveData) {
+//        Call<Void> call = apiService.deleteGroup("Bearer " + token, groupId);
+//        call.enqueue(new Callback<Void>() {
+//            @Override
+//            public void onResponse(Call<Void> call, Response<Void> response) {
+//                resultLiveData.postValue(response.isSuccessful());
+//                if (!response.isSuccessful()) {
+//                    Log.e("GroupRepository", "Delete failed: " + response.code());
+//                }
+//            }
+//
+//            @Override
+//            public void onFailure(Call<Void> call, Throwable t) {
+//                Log.e("GroupRepository", "Delete error: " + t.getMessage());
+//                resultLiveData.postValue(false);
+//            }
+//        });
+//    }
+
+    public interface DeleteCallback {
+        void onResponse(boolean success, int code);
+    }
+
+    public void deleteGroup(Long groupId, String token, DeleteCallback callback) {
         Call<Void> call = apiService.deleteGroup("Bearer " + token, groupId);
         call.enqueue(new Callback<Void>() {
             @Override
             public void onResponse(Call<Void> call, Response<Void> response) {
-                resultLiveData.postValue(response.isSuccessful());
-                if (!response.isSuccessful()) {
-                    Log.e("GroupRepository", "Delete failed: " + response.code());
-                }
+                callback.onResponse(response.isSuccessful(), response.code());
             }
 
             @Override
             public void onFailure(Call<Void> call, Throwable t) {
-                Log.e("GroupRepository", "Delete error: " + t.getMessage());
-                resultLiveData.postValue(false);
+                callback.onResponse(false, -1); // -1 для ошибки сети
             }
         });
     }
