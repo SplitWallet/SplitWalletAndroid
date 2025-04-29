@@ -61,49 +61,6 @@ import com.example.splitwallet.models.UserResponse;
 
 import lombok.Setter;
 
-//public class MembersAdapter extends RecyclerView.Adapter<MembersAdapter.MemberViewHolder> {
-//    private List<UserResponse> members = new ArrayList<>();
-//
-//    @NonNull
-//    @Override
-//    public MemberViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
-//        View view = LayoutInflater.from(parent.getContext())
-//                .inflate(R.layout.item_member, parent, false);
-//        return new MemberViewHolder(view);
-//    }
-//
-//    @Override
-//    public void onBindViewHolder(@NonNull MemberViewHolder holder, int position) {
-//        holder.bind(members.get(position));
-//    }
-//
-//    @Override
-//    public int getItemCount() {
-//        return members.size();
-//    }
-//
-//    public void updateMembers(List<UserResponse> newMembers) {
-//        members = newMembers != null ? newMembers : new ArrayList<>();
-//        notifyDataSetChanged();
-//    }
-//
-//    static class MemberViewHolder extends RecyclerView.ViewHolder {
-//        private final TextView nameView;
-//        private final TextView emailView;
-//
-//        public MemberViewHolder(View itemView) {
-//            super(itemView);
-//            nameView = itemView.findViewById(R.id.memberName);
-//            emailView = itemView.findViewById(R.id.memberEmail);
-//        }
-//
-//        public void bind(UserResponse member) {
-//            nameView.setText(member.getName());
-//            emailView.setText(member.getEmail());
-//        }
-//    }
-//}
-
 public class MembersAdapter extends RecyclerView.Adapter<MembersAdapter.MemberViewHolder> {
     private List<UserResponse> members = new ArrayList<>();
     @Setter
