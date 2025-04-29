@@ -78,9 +78,9 @@ public interface ApiService {
             @Header("Authorization") String authToken
     );
 
-    @POST("groups/{groupId}/join")
+    @POST("/groups/{uniqueCode}/join")
     Call<Void> joinGroup(
-            @Path("groupId") Long groupId,
+            @Path("uniqueCode") String uniqueCode,
             @Header("Authorization") String authToken
     );
 
