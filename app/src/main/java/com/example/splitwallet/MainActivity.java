@@ -1,3 +1,4 @@
+
 package com.example.splitwallet;
 
 import com.example.splitwallet.models.Group;
@@ -8,14 +9,21 @@ import com.example.splitwallet.ui.JoinGroupActivity;
 import com.example.splitwallet.ui.LoginActivity;
 
 import android.content.Context;
+import android.content.Intent;
 import android.content.SharedPreferences;
 import android.os.Bundle;
+import android.os.Handler;
+import android.util.Base64;
 import android.util.Log;
+import android.util.Pair;
+import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
-import android.view.Menu;
-import android.content.Intent;
+import android.view.ViewGroup;
 import android.widget.EditText;
+import android.widget.ImageButton;
+import android.widget.ImageView;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import com.example.splitwallet.viewmodels.GroupViewModel;
@@ -26,16 +34,27 @@ import androidx.activity.result.ActivityResultLauncher;
 import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AlertDialog;
+import androidx.appcompat.app.AppCompatActivity;
 import androidx.lifecycle.ViewModelProvider;
 import androidx.navigation.NavController;
 import androidx.navigation.Navigation;
 import androidx.navigation.ui.AppBarConfiguration;
 import androidx.navigation.ui.NavigationUI;
+
+import com.example.splitwallet.databinding.ActivityMainBinding;
+import com.example.splitwallet.models.Group;
+import com.example.splitwallet.ui.GroupDetailsActivity;
+import com.example.splitwallet.ui.GroupPagerActivity;
+import com.example.splitwallet.ui.JoinGroupActivity;
+import com.example.splitwallet.ui.LoginActivity;
+import com.example.splitwallet.viewmodels.GroupViewModel;
+import com.google.android.material.navigation.NavigationView;
 import androidx.drawerlayout.widget.DrawerLayout;
 import androidx.appcompat.app.AppCompatActivity;
 
-import com.example.splitwallet.databinding.ActivityMainBinding;
+import org.json.JSONObject;
 
+import java.nio.charset.StandardCharsets;
 import java.util.List;
 
 public class MainActivity extends AppCompatActivity {
@@ -58,6 +77,24 @@ public class MainActivity extends AppCompatActivity {
         binding = ActivityMainBinding.inflate(getLayoutInflater());
         setContentView(binding.getRoot());
 
+        NavigationView navigationView = findViewById(R.id.nav_view);
+        View headerView = navigationView.getHeaderView(0);
+
+        TextView usernameView = headerView.findViewById(R.id.nav_header_username);
+        TextView emailView = headerView.findViewById(R.id.nav_header_email);
+
+        SharedPreferences sharedPreferences = getSharedPreferences("auth", MODE_PRIVATE);
+        String token = sharedPreferences.getString("token", null);
+
+        if (token != null) {
+            Pair<String, String> userData = parseJwt(token); // логин, email
+            if (userData != null) {
+                usernameView.setText(userData.first);
+                emailView.setText(userData.second);
+            }
+        }
+
+
         setSupportActionBar(binding.appBarMain.toolbar);
         binding.appBarMain.fab.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -67,7 +104,7 @@ public class MainActivity extends AppCompatActivity {
             }
         });
         DrawerLayout drawer = binding.drawerLayout;
-        NavigationView navigationView = binding.navView;
+        //NavigationView navigationView = binding.navView;
         mAppBarConfiguration = new AppBarConfiguration.Builder(
                 R.id.nav_home, R.id.nav_gallery, R.id.nav_slideshow)
                 .setOpenableLayout(drawer)
@@ -87,42 +124,24 @@ public class MainActivity extends AppCompatActivity {
             }
 
             if (id == R.id.nav_join_group) {
-                SharedPreferences sharedPreferences = getSharedPreferences("auth", MODE_PRIVATE);
-                String token = sharedPreferences.getString("token", null);
-
                 Intent intent = new Intent(MainActivity.this, JoinGroupActivity.class);
                 intent.putExtra("TOKEN", token); // <-- передаём токен
                 startActivity(intent);
                 return true;
             }
 
-            // Группы
-            if (item.getGroupId() == R.id.nav_group_list) {
-                Long groupId = (Long) item.getIntent().getSerializableExtra("GROUP_ID");
-                openGroupDetails(groupId);
-                return true;
-            }
-
-            // Остальное — навигация через NavigationUI
-            return NavigationUI.onNavDestinationSelected(item, navController)
-                    || super.onOptionsItemSelected(item);
+            return false;
         });
-
 
         groupViewModel.groupLiveData.observe(this, group -> {
-            if (group != null) {
-                Toast.makeText(this, "Group created: " + group.getName(), Toast.LENGTH_SHORT).show();
-                addGroupToMenu(group);
-            } else {
-                Toast.makeText(this, "Failed to create group", Toast.LENGTH_SHORT).show();
-            }
+                if (group != null) {
+                    Toast.makeText(this, "Group created: " + group.getName(), Toast.LENGTH_SHORT).show();
+                    //addGroupToMenu(group);
+                    loadUserGroups(sharedPreferences.getString("token", null));
+                } else {
+                    Toast.makeText(this, "Failed to create group", Toast.LENGTH_SHORT).show();
+                }
         });
-
-        SharedPreferences sharedPreferences = getSharedPreferences("auth", MODE_PRIVATE);
-        String token = sharedPreferences.getString("token", null);
-        if (token != null) {
-            loadUserGroups(token);
-        }
 
         groupViewModel.getUserGroupsLiveData().observe(this, groups -> {
             if (groups != null) {
@@ -135,16 +154,18 @@ public class MainActivity extends AppCompatActivity {
             }
         });
 
-//        // Обновляем обработчик меню
-//        navigationView.setNavigationItemSelectedListener(item -> {
-//            if (item.getItemId() == R.id.nav_create_group) {
-//                showCreateGroupDialog();
-//                return true;
-//            }
-//            // Обработка выхода остается без изменений
-//            return NavigationUI.onNavDestinationSelected(item, navController)
-//                    || super.onOptionsItemSelected(item);
-//        });
+
+        groupViewModel.getGroupDeleted().observe(this, deleted -> {
+            if (deleted != null && deleted) {
+                Toast.makeText(this, "Группа удалена", Toast.LENGTH_SHORT).show();
+                SharedPreferences sharedPrefs = getSharedPreferences("auth", MODE_PRIVATE);
+                String authToken = sharedPrefs.getString("token", null);
+                if (authToken != null) {
+                    loadUserGroups(authToken);
+                }
+
+            }
+        });
     }
 
     @Override
@@ -227,18 +248,141 @@ public class MainActivity extends AppCompatActivity {
         NavigationView navigationView = binding.navView;
         Menu menu = navigationView.getMenu();
 
-        // Очищаем старые группы
+        // Полностью очищаем группу
         menu.removeGroup(R.id.nav_group_list);
 
-        // Добавляем новые группы
+        // Добавляем все группы, включая новосозданные
         for (Group group : groups) {
-            menu.add(R.id.nav_group_list, Menu.NONE, Menu.NONE, group.getName())
-                    .setIcon(R.drawable.ic_group_icon)
-                    .setOnMenuItemClickListener(item -> {
-                        openGroupExpenses(group.getId()); // TODO: сделать другой способ открытия GroupDetailsActivity
-                        return true;
-                    });
+            addGroupToMenu(menu, group);
         }
+    }
+
+    private void addGroupToMenu(Menu menu, Group group) {
+        // Проверяем, не добавлена ли уже эта группа
+        for (int i = 0; i < menu.size(); i++) {
+            MenuItem item = menu.getItem(i);
+            if (item.getTitle() != null && item.getTitle().equals(group.getName())) {
+                return; // Группа уже есть в меню
+            }
+        }
+
+        MenuItem item = menu.add(R.id.nav_group_list, Menu.NONE, Menu.NONE, "")
+                .setActionView(R.layout.menu_group_item);
+
+        View actionView = item.getActionView();
+        if (actionView != null) {
+            TextView groupName = actionView.findViewById(R.id.group_name);
+            ImageView groupIcon = actionView.findViewById(R.id.group_icon);
+            ImageButton deleteBtn = actionView.findViewById(R.id.delete_btn);
+
+            groupName.setText(group.getName());
+            groupIcon.setImageResource(R.drawable.ic_group_icon);
+
+            actionView.setOnClickListener(v -> openGroupExpenses(group.getId()));
+            deleteBtn.setOnClickListener(v -> showDeleteGroupDialog(group));
+        }
+    }
+
+    private void openGroupExpensesByName(String groupName) {
+        List<Group> groups = groupViewModel.getUserGroupsLiveData().getValue();
+        if (groups != null) {
+            for (Group group : groups) {
+                if (group.getName().equals(groupName)) {
+                    openGroupExpenses(group.getId());
+                    return;
+                }
+            }
+        }
+        Toast.makeText(this, "Группа не найдена", Toast.LENGTH_SHORT).show();
+    }
+
+    private void showDeleteGroupDialog(Group group) {
+        new AlertDialog.Builder(this)
+                .setTitle("Удалить группу?")
+                .setMessage("Вы уверены, что хотите удалить группу \"" + group.getName() + "\"?")
+                .setPositiveButton("Удалить", (dialog, which) -> {
+                    deleteGroup(group);
+                })
+                .setNegativeButton("Отмена", null)
+                .setIcon(R.drawable.ic_delete)
+                .show();
+    }
+
+//    private void deleteGroup(Group group) {
+//        SharedPreferences sharedPrefs = getSharedPreferences("auth", MODE_PRIVATE);
+//        String token = sharedPrefs.getString("token", null);
+//
+//        if (token != null) {
+//            // 1. Вызываем удаление группы
+//            groupViewModel.deleteGroup(group.getId(), token);
+//
+//            // 2. Наблюдаем за изменением статуса удаления
+//            groupViewModel.getGroupDeleted().observe(this, success -> {
+//                if (success != null) {
+//                    if (success) {
+//                        Toast.makeText(this, "Группа удалена", Toast.LENGTH_SHORT).show();
+//
+//                        // Перезагружаем список групп
+//                        loadUserGroups(token);
+//
+//                        // Удаляем observer, чтобы избежать утечек памяти
+//                        groupViewModel.getGroupDeleted().removeObservers(this);
+//                    } else {
+//                        Toast.makeText(this, "Ошибка при удалении группы", Toast.LENGTH_SHORT).show();
+//                    }
+//                }
+//            });
+//        }
+//    }
+
+    private void deleteGroup(Group group) {
+        SharedPreferences sharedPrefs = getSharedPreferences("auth", MODE_PRIVATE);
+        String token = sharedPrefs.getString("token", null);
+
+        if (token != null) {
+            groupViewModel.deleteGroup(group.getId(), token);
+
+            groupViewModel.getGroupDeleted().observe(this, success -> {
+                if (success != null) {
+                    int statusCode = groupViewModel.getLastDeleteResponseCode();
+
+                    if (success) {
+                        handleDeleteSuccess();
+                    } else {
+                        handleDeleteError(statusCode);
+                    }
+
+                    groupViewModel.getGroupDeleted().removeObservers(this);
+                }
+            });
+        }
+    }
+
+    private void handleDeleteSuccess() {
+        Toast.makeText(this, "Группа удалена", Toast.LENGTH_SHORT).show();
+        loadUserGroups(getSharedPreferences("auth", MODE_PRIVATE).getString("token", null));
+    }
+
+    private void handleDeleteError(int statusCode) {
+        String errorMessage;
+        switch (statusCode) {
+            case 400:
+                errorMessage = "Группу может удалить только её владелец";
+                break;
+            case 401:
+                errorMessage = "Ошибка авторизации";
+                logout(this);
+                break;
+            case 404:
+                errorMessage = "Группа не найдена или уже присоединены";
+                break;
+            case -1:
+                errorMessage = "Ошибка сети. Проверьте подключение";
+                break;
+            default:
+                errorMessage = "Ошибка при удалении (код: " + statusCode + ")";
+        }
+        Toast.makeText(this, errorMessage, Toast.LENGTH_SHORT).show();
     }
 
     private void openGroupDetails(Long groupId) {
@@ -308,15 +452,22 @@ public class MainActivity extends AppCompatActivity {
         builder.show();
     }
 
-    private void addGroupToMenu(Group group) {
-        NavigationView navigationView = binding.navView;
-        Menu menu = navigationView.getMenu();
-        menu.add(R.id.nav_group_list, Menu.NONE, Menu.NONE, group.getName()).setIcon(R.drawable.ic_menu_gallery)
-                .setOnMenuItemClickListener(item -> {
-                    Toast.makeText(this, "Opening group: " + group.getName(), Toast.LENGTH_SHORT).show();
-                    openGroupExpenses(group.getId());
-                    return true;
-                });
-    }
+    public static Pair<String, String> parseJwt(String jwtToken) {
+        try {
+            String[] parts = jwtToken.split("\\.");
+            if (parts.length != 3) return null;
 
+            byte[] decodedBytes = Base64.decode(parts[1], Base64.URL_SAFE);
+            String payloadJson = new String(decodedBytes, StandardCharsets.UTF_8);
+            JSONObject payload = new JSONObject(payloadJson);
+
+            String login = payload.optString("preferred_username", "User");
+            String email = payload.optString("email", "user@email.com");
+
+            return new Pair<>(login, email);
+        } catch (Exception e) {
+            e.printStackTrace();
+            return null;
+        }
+    }
 }
