@@ -5,7 +5,6 @@ import static android.content.Context.MODE_PRIVATE;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.os.Bundle;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -26,8 +25,6 @@ import com.example.splitwallet.ui.MemberDetailsActivity;
 import com.example.splitwallet.ui.MembersAdapter;
 import com.example.splitwallet.utils.InviteCodeUtil;
 import com.example.splitwallet.viewmodels.GroupViewModel;
-
-import java.util.Objects;
 
 public class GroupDetailsFragment extends Fragment {
     private Long groupId;
@@ -70,30 +67,16 @@ public class GroupDetailsFragment extends Fragment {
 
         loadGroupMembers();
 
-        btnInvite.setOnClickListener(v -> showInviteDialog());
-        btnLeaveGroup.setOnClickListener(v -> showLeaveGroupDialog());
-
-        groupViewModel.getLeftGroupLiveData().observe(getViewLifecycleOwner(), success -> {
-            if (success != null && success) {
-                requireActivity().onBackPressed();
+        groupViewModel.getGroupMembersLiveData().observe(getViewLifecycleOwner(), members -> {
+            if (members != null) {
+                adapter.updateMembers(members);
             } else {
-                int code = groupViewModel.getLastLeaveGroupResponseCode();
-                String message;
-
-                switch (code) {
-                    case 400:
-                        message = "Владелец группы не может её покинуть";
-                        break;
-                    case 500:
-                        message = "Внутренняя ошибка сервера";
-                        break;
-                    default:
-                        message = "Ошибка выхода из группы";
-                        break;
-                }
-                Toast.makeText(getContext(), message, Toast.LENGTH_SHORT).show();
+                Toast.makeText(getContext(), "Failed to load members", Toast.LENGTH_SHORT).show();
             }
         });
+
+        btnInvite.setOnClickListener(v -> showInviteDialog());
+        btnLeaveGroup.setOnClickListener(v -> showLeaveGroupDialog());
 
         return view;
     }
@@ -102,16 +85,16 @@ public class GroupDetailsFragment extends Fragment {
         String token = getAuthToken();
         if (token != null) {
             groupViewModel.loadGroupMembers(groupId, token);
-            groupViewModel.getGroupMembersLiveData().observe(getViewLifecycleOwner(), members -> {
-                if (members != null) {
-                    adapter.updateMembers(members);
-                } else {
-                    Toast.makeText(getContext(), "Ошибка загрузки участников", Toast.LENGTH_SHORT).show();
-                }
-            });
         }
-    }
 
+        groupViewModel.getGroupMembersLiveData().observe(getViewLifecycleOwner(), members -> {
+            if (members != null) {
+                adapter.updateMembers(members);
+            } else {
+                Toast.makeText(getContext(), "Failed to load members", Toast.LENGTH_SHORT).show();
+            }
+        });
+    }
 
     private String getAuthToken() {
         SharedPreferences sharedPreferences = requireActivity().getSharedPreferences("auth", MODE_PRIVATE);
@@ -143,38 +126,13 @@ public class GroupDetailsFragment extends Fragment {
     private void showLeaveGroupDialog() {
         new AlertDialog.Builder(requireContext())
                 .setTitle("Leave Group")
-                .setMessage("Are you sure you want to leave this group?")
+                .setMessage("Are you sure?")
                 .setPositiveButton("Leave", (dialog, which) -> {
-                    String token = getAuthToken();
-                    String userId = getCurrentUserId();
-                    if (token != null && userId != null && !userId.isEmpty()) {
-                        groupViewModel.leaveGroup(groupId, userId, token);
-                    }
+                    // TODO: Реализовать выход из группы
+                    Toast.makeText(getContext(), "Left the group", Toast.LENGTH_SHORT).show();
+                    requireActivity().onBackPressed();
                 })
                 .setNegativeButton("Cancel", null)
                 .show();
-    }
-
-    private String getCurrentUserId() {
-        SharedPreferences sharedPreferences = requireActivity().getSharedPreferences("auth", MODE_PRIVATE);
-        String token = sharedPreferences.getString("token", null);
-        return extractUserIdFromJwt(token);
-    }
-
-    private String extractUserIdFromJwt(String jwtToken) {
-        try {
-            if (jwtToken == null) return null;
-
-            String[] parts = jwtToken.split("\\.");
-            if (parts.length >= 2) {
-                String payloadJson = new String(
-                        android.util.Base64.decode(parts[1], android.util.Base64.URL_SAFE));
-                org.json.JSONObject payload = new org.json.JSONObject(payloadJson);
-                return payload.getString("sub");
-            }
-        } catch (Exception e) {
-            Log.e("JWT_ERROR", "Error extracting user ID from token", e);
-        }
-        return null;
     }
 }
