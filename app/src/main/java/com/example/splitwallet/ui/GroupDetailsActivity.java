@@ -23,12 +23,6 @@ import com.google.android.material.floatingactionbutton.FloatingActionButton;
 
 public class GroupDetailsActivity extends AppCompatActivity {
     private GroupViewModel viewModel;
-    @SuppressLint("DefaultLocale")
-    public String generateJoinCode(String groupId) {
-        int hash = groupId.hashCode();
-        int code = Math.abs(hash) % 1000000; // 6 цифр
-        return String.format("%06d", code);
-    }
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
