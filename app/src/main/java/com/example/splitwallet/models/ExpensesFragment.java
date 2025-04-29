@@ -457,7 +457,6 @@ public class ExpensesFragment extends Fragment {
         AlertDialog dialog = builder.create();
 
         expenseViewModel.loadExpenseUsers(groupId, expenseId, getAuthToken());
-        Log.d("TAG_1", "loadExpenseUsers");
         expenseViewModel.getGroupMembersMap().observe(getViewLifecycleOwner(), members -> {
             expenseViewModel.getExpenseUsersLiveData().observe(getViewLifecycleOwner(), expenseUsers -> {
                 ParticipantDistributionAdapter adapter = new ParticipantDistributionAdapter(
@@ -467,7 +466,6 @@ public class ExpensesFragment extends Fragment {
                         recyclerView  // передаем сам RecyclerView
                 );
                 recyclerView.setAdapter(adapter);
-                Log.d("TAG_1", "setAdapter(adapter)");
                 recyclerView.setLayoutManager(new LinearLayoutManager(requireContext()));
             });
         });
