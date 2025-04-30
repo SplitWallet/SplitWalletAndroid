@@ -104,13 +104,25 @@ public class ExpenseViewModel extends ViewModel {
     }
 
     public void updateExpense(Long groupId, Long expenseId,
-                              UpdateExpenseRequest request, String token) {
+                              UpdateExpenseRequest request, String token,
+                              List<ExpenseUser> participants) { // Добавьте participants
+
+        // Проверяем сумму распределений
+        double sumParticipants = participants.stream()
+                .mapToDouble(ExpenseUser::getAmount)
+                .sum();
+
+        if (request.getAmount() < sumParticipants) {
+            errorLiveData.postValue("Сумма расходов (" + request.getAmount() +
+                    ") меньше суммы распределений (" + sumParticipants + ")");
+            return;
+        }
+
         expenseRepository.updateExpense(groupId, expenseId, request, token,
                 new ExpenseRepository.ExpenseCallback() {
                     @Override
                     public void onSuccess(Expense expense) {
-                        // Обновляем список расходов
-                        loadExpenses(groupId, token);
+                        loadExpenses(groupId, token); // Обновляем список
                     }
 
                     @Override
@@ -155,18 +167,27 @@ public class ExpenseViewModel extends ViewModel {
 
 
     public void updateExpenseUsers(Long groupId, Long expenseId, String token, List<ExpenseUser> updatedDistribution) {
-        expenseRepository.updateExpenseUsers(groupId, expenseId, token, updatedDistribution, new Callback<List<ExpenseUser>>() {
-            @Override
-            public void onResponse(Call<List<ExpenseUser>> call, Response<List<ExpenseUser>> response) {
-                if (response.isSuccessful()) {
-                    expenseUsersLiveData.postValue(response.body());
-                }
+        for (ExpenseUser eu : updatedDistribution) {
+            if (eu.getPaid() == null) {
+                eu.setPaid(0.0);
             }
+        }
 
-            @Override
-            public void onFailure(Call<List<ExpenseUser>> call, Throwable t) {
-                // Обработка ошибки
-            }
-        });
+        expenseRepository.updateExpenseUsers(groupId, expenseId, token, updatedDistribution,
+                new Callback<List<ExpenseUser>>() {
+                    @Override
+                    public void onResponse(Call<List<ExpenseUser>> call, Response<List<ExpenseUser>> response) {
+                        if (response.isSuccessful()) {
+                            expenseUsersLiveData.postValue(response.body());
+                        } else {
+                            // Обработка ошибки
+                        }
+                    }
+
+                    @Override
+                    public void onFailure(Call<List<ExpenseUser>> call, Throwable t) {
+                        // Обработка ошибки
+                    }
+                });
     }
 }

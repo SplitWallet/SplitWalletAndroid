@@ -52,6 +52,7 @@ public class ExpensesFragment extends Fragment {
     private SwipeRefreshLayout swipeRefreshLayout;
     private TextView emptyView;
     private ParticipantDistributionAdapter participantDistributionAdapter;
+    private ParticipantDistributionAdapter distributionAdapter;
 
     public static ExpensesFragment newInstance(Long groupId) {
         ExpensesFragment fragment = new ExpensesFragment();
@@ -293,7 +294,6 @@ public class ExpensesFragment extends Fragment {
             showExpenseSettingsDialog(groupId, expense.getId(), expense.getAmount());
         });
         builder.setPositiveButton("Save", (dialog, which) -> {
-            // Получаем обновленные данные
             String name = etName.getText().toString();
             String description = etDescription.getText().toString();
             String amountStr = etAmount.getText().toString();
@@ -301,8 +301,7 @@ public class ExpensesFragment extends Fragment {
             String currency = spinnerCurrency.getSelectedItem().toString();
 
             if (name.isEmpty() || amountStr.isEmpty()) {
-                Toast.makeText(requireContext(),
-                        "Name and amount are required", Toast.LENGTH_SHORT).show();
+                Toast.makeText(requireContext(), "Name and amount are required", Toast.LENGTH_SHORT).show();
                 return;
             }
 
@@ -310,21 +309,32 @@ public class ExpensesFragment extends Fragment {
                 double amount = Double.parseDouble(amountStr);
                 LocalDate date = LocalDate.parse(dateStr);
 
-                // Создаем запрос на обновление
+                // Получаем текущее распределение
+                List<ExpenseUser> participants = getUpdatedDistributionFromAdapter();
+                double sumParticipants = participants.stream()
+                        .mapToDouble(ExpenseUser::getAmount)
+                        .sum();
+
+                // Проверяем условие
+                if (amount < sumParticipants) {
+                    Toast.makeText(requireContext(),
+                            "Сумма расходов (" + amount + ") меньше суммы распределений (" + sumParticipants + ")",
+                            Toast.LENGTH_LONG).show();
+                    return;
+                }
+
+                // Если всё ок, отправляем
                 UpdateExpenseRequest request = new UpdateExpenseRequest(
                         name, date, description, amount, currency);
 
                 String token = getAuthToken();
                 if (token != null) {
-                    expenseViewModel.updateExpense(
-                            groupId, expense.getId(), request, token);
+                    expenseViewModel.updateExpense(groupId, expense.getId(), request, token, participants);
                 }
             } catch (NumberFormatException e) {
-                Toast.makeText(requireContext(),
-                        "Invalid amount format", Toast.LENGTH_SHORT).show();
+                Toast.makeText(requireContext(), "Invalid amount format", Toast.LENGTH_SHORT).show();
             } catch (DateTimeParseException e) {
-                Toast.makeText(requireContext(),
-                        "Invalid date format", Toast.LENGTH_SHORT).show();
+                Toast.makeText(requireContext(), "Invalid date format", Toast.LENGTH_SHORT).show();
             }
         });
 
@@ -453,46 +463,68 @@ public class ExpensesFragment extends Fragment {
 
         RecyclerView recyclerView = dialogView.findViewById(R.id.participantsRecyclerView);
         Button btnSave = dialogView.findViewById(R.id.btnSaveDistribution);
+        recyclerView.setLayoutManager(new LinearLayoutManager(requireContext()));
 
         AlertDialog dialog = builder.create();
 
+        // Загружаем данные
         expenseViewModel.loadExpenseUsers(groupId, expenseId, getAuthToken());
-        Log.d("TAG_1", "loadExpenseUsers");
-        expenseViewModel.getGroupMembersMap().observe(getViewLifecycleOwner(), members -> {
-            expenseViewModel.getExpenseUsersLiveData().observe(getViewLifecycleOwner(), expenseUsers -> {
-                ParticipantDistributionAdapter adapter = new ParticipantDistributionAdapter(
-                        (List<User>) members,
-                        expenseUsers,
-                        totalAmount,
-                        recyclerView  // передаем сам RecyclerView
-                );
-                recyclerView.setAdapter(adapter);
-                Log.d("TAG_1", "setAdapter(adapter)");
-                recyclerView.setLayoutManager(new LinearLayoutManager(requireContext()));
-            });
+
+        // Объединяем observer'ы, чтобы избежать вложенности
+        expenseViewModel.getGroupMembersMap().observe(getViewLifecycleOwner(), membersMap -> {
+            List<ExpenseUser> expenseUsers = expenseViewModel.getExpenseUsersLiveData().getValue();
+            updateAdapter(membersMap, expenseUsers, totalAmount, recyclerView);
+        });
+
+        expenseViewModel.getExpenseUsersLiveData().observe(getViewLifecycleOwner(), expenseUsers -> {
+            Map<String, User> membersMap = expenseViewModel.getGroupMembersMap().getValue();
+            updateAdapter(membersMap, expenseUsers, totalAmount, recyclerView);
         });
 
         btnSave.setOnClickListener(v -> {
-            List<ExpenseUser> updatedDistribution = getUpdatedDistributionFromAdapter();
-            // Проверка суммы
-            double sum = 0;
-            for (ExpenseUser eu : updatedDistribution) {
-                sum += eu.getAmount();
+            if (distributionAdapter == null) {
+                Toast.makeText(getContext(), "Данные еще не загружены", Toast.LENGTH_SHORT).show();
+                return;
             }
 
+            List<ExpenseUser> updatedDistribution = distributionAdapter.getUpdatedDistribution();
+
+            if (updatedDistribution.isEmpty()) {
+                Toast.makeText(getContext(), "Выберите хотя бы одного участника", Toast.LENGTH_SHORT).show();
+                return;
+            }
+
+            double sum = updatedDistribution.stream()
+                    .mapToDouble(ExpenseUser::getAmount)
+                    .sum();
+
             if (Math.abs(sum - totalAmount) > 0.01) {
-                Toast.makeText(requireContext(),
-                        "Сумма распределения должна равняться " + totalAmount,
+                Toast.makeText(getContext(),
+                        String.format("Сумма должна равняться %.2f", totalAmount),
                         Toast.LENGTH_SHORT).show();
             } else {
-                expenseViewModel.updateExpenseUsers(groupId, expenseId,
-                        getAuthToken(), updatedDistribution);
+                expenseViewModel.updateExpenseUsers(groupId, expenseId, getAuthToken(), updatedDistribution);
                 dialog.dismiss();
             }
         });
 
         dialog.show();
     }
+
+    private void updateAdapter(Map<String, User> membersMap, List<ExpenseUser> expenseUsers,
+                               double totalAmount, RecyclerView recyclerView) {
+        if (membersMap == null || expenseUsers == null) return;
+
+        List<User> membersList = new ArrayList<>(membersMap.values());
+        distributionAdapter = new ParticipantDistributionAdapter(
+                membersList,
+                expenseUsers,
+                totalAmount,
+                recyclerView
+        );
+        recyclerView.setAdapter(distributionAdapter);
+    }
+
     private List<ExpenseUser> getUpdatedDistributionFromAdapter() {
         if (participantDistributionAdapter != null) {
             return participantDistributionAdapter.getUpdatedDistribution();
