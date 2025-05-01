@@ -11,6 +11,7 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ArrayAdapter;
+import android.widget.Button;
 import android.widget.EditText;
 import android.widget.PopupMenu;
 import android.widget.Spinner;
@@ -36,8 +37,10 @@ import com.google.zxing.integration.android.IntentResult;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeParseException;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
@@ -48,6 +51,7 @@ public class ExpensesFragment extends Fragment {
     private FloatingActionButton fabMain;
     private SwipeRefreshLayout swipeRefreshLayout;
     private TextView emptyView;
+    private ParticipantDistributionAdapter participantDistributionAdapter;
 
     public static ExpensesFragment newInstance(Long groupId) {
         ExpensesFragment fragment = new ExpensesFragment();
@@ -250,6 +254,7 @@ public class ExpensesFragment extends Fragment {
         EditText etAmount = dialogView.findViewById(R.id.etAmount);
         EditText etDate = dialogView.findViewById(R.id.etDate);
         Spinner spinnerCurrency = dialogView.findViewById(R.id.spinnerCurrency);
+        Button btnMoreOptions = dialogView.findViewById(R.id.btnMoreOptions);
 
         // Заполняем поля данными расхода
         etName.setText(expense.getName());
@@ -284,7 +289,9 @@ public class ExpensesFragment extends Fragment {
                     currentDate.getDayOfMonth());
             datePicker.show();
         });
-
+        btnMoreOptions.setOnClickListener(v -> {
+            showExpenseSettingsDialog(groupId, expense.getId(), expense.getAmount());
+        });
         builder.setPositiveButton("Save", (dialog, which) -> {
             // Получаем обновленные данные
             String name = etName.getText().toString();
@@ -438,4 +445,64 @@ public class ExpensesFragment extends Fragment {
         return params;
     }
 
+    private void showExpenseSettingsDialog(Long groupId, Long expenseId, Double totalAmount) {
+        AlertDialog.Builder builder = new AlertDialog.Builder(requireContext());
+        View dialogView = LayoutInflater.from(requireContext())
+                .inflate(R.layout.dialog_expense_settings, null);
+        builder.setView(dialogView);
+
+        RecyclerView recyclerView = dialogView.findViewById(R.id.participantsRecyclerView);
+        Button btnSave = dialogView.findViewById(R.id.btnSaveDistribution);
+
+        AlertDialog dialog = builder.create();
+
+        expenseViewModel.loadExpenseUsers(groupId, expenseId, getAuthToken());
+        Log.d("TAG_1", "loadExpenseUsers");
+        expenseViewModel.getGroupMembersMap().observe(getViewLifecycleOwner(), members -> {
+            expenseViewModel.getExpenseUsersLiveData().observe(getViewLifecycleOwner(), expenseUsers -> {
+                ParticipantDistributionAdapter adapter = new ParticipantDistributionAdapter(
+                        (List<User>) members,
+                        expenseUsers,
+                        totalAmount,
+                        recyclerView  // передаем сам RecyclerView
+                );
+                recyclerView.setAdapter(adapter);
+                Log.d("TAG_1", "setAdapter(adapter)");
+                recyclerView.setLayoutManager(new LinearLayoutManager(requireContext()));
+            });
+        });
+
+        btnSave.setOnClickListener(v -> {
+            List<ExpenseUser> updatedDistribution = getUpdatedDistributionFromAdapter();
+            // Проверка суммы
+            double sum = 0;
+            for (ExpenseUser eu : updatedDistribution) {
+                sum += eu.getAmount();
+            }
+
+            if (Math.abs(sum - totalAmount) > 0.01) {
+                Toast.makeText(requireContext(),
+                        "Сумма распределения должна равняться " + totalAmount,
+                        Toast.LENGTH_SHORT).show();
+            } else {
+                expenseViewModel.updateExpenseUsers(groupId, expenseId,
+                        getAuthToken(), updatedDistribution);
+                dialog.dismiss();
+            }
+        });
+
+        dialog.show();
+    }
+    private List<ExpenseUser> getUpdatedDistributionFromAdapter() {
+        if (participantDistributionAdapter != null) {
+            return participantDistributionAdapter.getUpdatedDistribution();
+        }
+        return new ArrayList<>();
+    }
+
+    private void saveDistribution(Long groupId, Long expenseId) {
+        // Получаем данные из адаптера и отправляем на сервер
+        List<ExpenseUser> updatedDistribution = getUpdatedDistributionFromAdapter();
+        expenseViewModel.updateExpenseUsers(groupId, expenseId, getAuthToken(), updatedDistribution);
+    }
 }

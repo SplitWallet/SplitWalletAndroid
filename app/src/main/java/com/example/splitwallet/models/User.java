@@ -17,14 +17,14 @@ public class User {
 
     public User() {}
 
+
     public User(String id, String username, String email, String phoneNumber) {
         this.id = id;
-        this.username = username;  // Исправлено: было this.username = this.username
+        this.username = this.username;
         this.email = email;
         this.phoneNumber = phoneNumber;
     }
 
-    // Метод из первой версии
     public String getName() {
         return this.username;
     }
