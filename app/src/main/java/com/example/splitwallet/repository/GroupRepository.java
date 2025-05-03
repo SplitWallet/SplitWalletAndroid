@@ -28,11 +28,22 @@ public class GroupRepository {
         void onResponse(boolean success, int code);
     }
 
+    public interface InviteCodeCallback {
+        void onSuccess(String inviteCode);
+        void onError(String errorMessage);
+    }
+
+
     private final ApiService apiService;
     private final MutableLiveData<List<UserResponse>> groupMembersLiveData = new MutableLiveData<>();
 
     public GroupRepository() {
         apiService = RetrofitClient.getRetrofitInstance().create(ApiService.class);
+    }
+
+    // Для тестов
+    public GroupRepository(ApiService apiService) {
+        this.apiService = apiService;
     }
 
     public void createGroup(String name, MutableLiveData<Group> groupLiveData, String token) {
@@ -104,26 +115,6 @@ public class GroupRepository {
         });
     }
 
-//
-//    public void deleteGroup(Long groupId, String token, MutableLiveData<Boolean> resultLiveData) {
-//        Call<Void> call = apiService.deleteGroup("Bearer " + token, groupId);
-//        call.enqueue(new Callback<Void>() {
-//            @Override
-//            public void onResponse(Call<Void> call, Response<Void> response) {
-//                resultLiveData.postValue(response.isSuccessful());
-//                if (!response.isSuccessful()) {
-//                    Log.e("GroupRepository", "Delete failed: " + response.code());
-//                }
-//            }
-//
-//            @Override
-//            public void onFailure(Call<Void> call, Throwable t) {
-//                Log.e("GroupRepository", "Delete error: " + t.getMessage());
-//                resultLiveData.postValue(false);
-//            }
-//        });
-//    }
-
     public interface DeleteCallback {
         void onResponse(boolean success, int code);
     }
@@ -157,4 +148,33 @@ public class GroupRepository {
             }
         });
     }
+
+    public void getGroupInviteCode(Long groupId, String token, InviteCodeCallback callback) {
+        Call<Group> call = apiService.getGroupById(groupId, "Bearer " + token);
+        call.enqueue(new Callback<Group>() {
+            @Override
+            public void onResponse(Call<Group> call, Response<Group> response) {
+                if (response.isSuccessful()) {
+                    Group group = response.body();
+                    if (group != null && group.getUniqueCode() != null) {
+                        callback.onSuccess(group.getUniqueCode());
+                    } else {
+                        callback.onError("Код приглашения не найден");
+                    }
+                } else {
+                    try {
+                        callback.onError("Ошибка: " + response.errorBody().string());
+                    } catch (IOException e) {
+                        callback.onError("Неизвестная ошибка");
+                    }
+                }
+            }
+
+            @Override
+            public void onFailure(Call<Group> call, Throwable t) {
+                callback.onError("Ошибка сети: " + t.getMessage());
+            }
+        });
+    }
+
 }
