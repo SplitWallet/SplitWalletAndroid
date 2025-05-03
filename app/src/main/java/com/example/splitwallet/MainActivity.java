@@ -229,6 +229,7 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void logout(Context context){
+        LoginActivity.signOutFromGoogle(context);
         SharedPreferences sharedPreferences = context.getSharedPreferences("auth", MODE_PRIVATE);
         sharedPreferences.edit()
                 .remove("token")

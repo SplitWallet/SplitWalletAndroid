@@ -5,6 +5,7 @@ import com.example.splitwallet.models.CreateExpenseRequest;
 import com.example.splitwallet.models.CreateGroupRequest;
 import com.example.splitwallet.models.Expense;
 import com.example.splitwallet.models.ExpenseUser;
+import com.example.splitwallet.models.GoogleLoginRequest;
 import com.example.splitwallet.models.Group;
 import com.example.splitwallet.models.JWTtoken;
 import com.example.splitwallet.models.LoginRequest;
@@ -32,6 +33,9 @@ public interface ApiService {
 
     @POST("auth-service/registration")
     Call<JWTtoken> register(@Body RegisterRequest registerRequest);
+
+    @POST("auth-service/login/google")
+    Call<JWTtoken> loginWithGoogle(@Body GoogleLoginRequest googleLoginRequest);
 
     @POST("groups-service/groups/create")
     Call<Group> createGroup(

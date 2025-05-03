@@ -35,6 +35,17 @@ android {
     buildFeatures {
         dataBinding = true
     }
+    packagingOptions {
+        exclude ("META-INF/DEPENDENCIES")
+        exclude ("META-INF/LICENSE")
+        exclude ("META-INF/LICENSE.txt")
+        exclude ("META-INF/license.txt")
+        exclude ("META-INF/NOTICE")
+        exclude ("META-INF/NOTICE.txt")
+        exclude ("META-INF/notice.txt")
+        exclude ("META-INF/ASL2.0")
+        exclude ("META-INF/*.kotlin_module")
+    }
 }
 
 dependencies {
@@ -81,4 +92,16 @@ dependencies {
     implementation ("com.journeyapps:zxing-android-embedded:4.3.0")
     implementation ("com.github.clans:fab:1.6.4")
     implementation ("androidx.recyclerview:recyclerview:1.3.2")
+
+    // Google OAuth
+    implementation ("com.google.android.gms:play-services-auth:20.7.0")
+    implementation ("com.google.api-client:google-api-client-android:2.2.0")
+    implementation ("com.google.http-client:google-http-client-gson:1.43.3")
+    implementation("androidx.appcompat:appcompat:1.6.1")
+
+    implementation("com.google.android.material:material:1.10.0")
+    implementation("androidx.constraintlayout:constraintlayout:2.1.4")
+    testImplementation("junit:junit:4.13.2")
+    androidTestImplementation("androidx.test.ext:junit:1.1.5")
+    androidTestImplementation("androidx.test.espresso:espresso-core:3.5.1")
 }
