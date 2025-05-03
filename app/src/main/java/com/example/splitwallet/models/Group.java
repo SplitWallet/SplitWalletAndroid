@@ -15,4 +15,5 @@ public class Group {
     private List<User> members;
     private List<Expense> events;
     private boolean isClosed;
+    private String uniqueCode;
 }
