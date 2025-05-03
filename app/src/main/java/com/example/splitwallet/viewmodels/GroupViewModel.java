@@ -29,6 +29,12 @@ public class GroupViewModel extends ViewModel {
     private final MutableLiveData<Boolean> leftGroupLiveData = new MutableLiveData<>();
     private MutableLiveData<JWTtoken> tokenLiveData;
 
+    private final MutableLiveData<String> inviteCodeLiveData = new MutableLiveData<>();
+
+    public LiveData<String> getInviteCodeLiveData() {
+        return inviteCodeLiveData;
+    }
+
     @Getter
     private int lastLeaveGroupResponseCode = -1;
     // Добавляем поле для хранения последнего кода ответа
@@ -87,11 +93,6 @@ public class GroupViewModel extends ViewModel {
     public void resetDeleteStatus() {
         groupDeleted.setValue(null);
     }
-
-//    public void deleteGroup(Long groupId, String token) {
-//        groupRepository.deleteGroup(groupId, token, groupDeleted);
-//    }
-
     public void deleteGroup(Long groupId, String token) {
         groupRepository.deleteGroup(groupId, token, new GroupRepository.DeleteCallback() {
             @Override
@@ -129,4 +130,19 @@ public class GroupViewModel extends ViewModel {
         }
         tokenLiveData.setValue(token);
     }
+
+    public void fetchGroupInviteCode(Long groupId, String token) {
+        groupRepository.getGroupInviteCode(groupId, token, new GroupRepository.InviteCodeCallback() {
+            @Override
+            public void onSuccess(String inviteCode) {
+                inviteCodeLiveData.postValue(inviteCode);
+            }
+
+            @Override
+            public void onError(String errorMessage) {
+                errorLiveData.postValue(errorMessage);
+            }
+        });
+    }
+
 }
