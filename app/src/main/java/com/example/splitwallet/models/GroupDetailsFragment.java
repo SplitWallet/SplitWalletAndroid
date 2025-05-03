@@ -24,7 +24,6 @@ import com.example.splitwallet.R;
 import com.example.splitwallet.ui.LoginActivity;
 import com.example.splitwallet.ui.MemberDetailsActivity;
 import com.example.splitwallet.ui.MembersAdapter;
-import com.example.splitwallet.utils.InviteCodeUtil;
 import com.example.splitwallet.viewmodels.GroupViewModel;
 
 import java.util.Objects;
@@ -73,7 +72,7 @@ public class GroupDetailsFragment extends Fragment {
         btnInvite.setOnClickListener(v -> showInviteDialog());
         btnLeaveGroup.setOnClickListener(v -> showLeaveGroupDialog());
 
-        // Подписка на выход из группы 
+        //  Подписка на выход из группы
         groupViewModel.getLeftGroupLiveData().observe(getViewLifecycleOwner(), success -> {
             if (success != null && success) {
                 requireActivity().onBackPressed();
@@ -100,7 +99,6 @@ public class GroupDetailsFragment extends Fragment {
     }
 
     private void loadGroupMembers() {
-        // Загрузка участников
         String token = getAuthToken();
         if (token != null) {
             groupViewModel.loadGroupMembers(groupId, token);
@@ -134,12 +132,24 @@ public class GroupDetailsFragment extends Fragment {
     }
 
     private void showInviteDialog() {
-        new AlertDialog.Builder(requireContext())
-                .setTitle("Код приглашения")
-                .setMessage("Поделитесь этим кодом: " + InviteCodeUtil.encode(groupId))
-                .setPositiveButton("OK", null)
-                .show();
+        String token = getAuthToken();
+        if (token != null) {
+            groupViewModel.fetchGroupInviteCode(groupId, token);
+        }
+
+        groupViewModel.getInviteCodeLiveData().observe(getViewLifecycleOwner(), inviteCode -> {
+            if (inviteCode != null) {
+                new AlertDialog.Builder(requireContext())
+                        .setTitle("Код приглашения")
+                        .setMessage("Поделитесь этим кодом: " + inviteCode)
+                        .setPositiveButton("OK", null)
+                        .show();
+            } else {
+                Toast.makeText(getContext(), "Не удалось получить код приглашения", Toast.LENGTH_SHORT).show();
+            }
+        });
     }
+
 
     private void showLeaveGroupDialog() {
         // Реализовано полноценное подтверждение выхода
