@@ -17,7 +17,6 @@ import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.example.splitwallet.R;
-import com.example.splitwallet.utils.InviteCodeUtil;
 import com.example.splitwallet.viewmodels.GroupViewModel;
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
 
@@ -88,14 +87,6 @@ public class GroupDetailsActivity extends AppCompatActivity {
             intent.putExtra("memberEmail", member.getEmail());
             intent.putExtra("debt", 0); // пока заглушка
             startActivity(intent);
-        });
-
-        findViewById(R.id.btnInvite).setOnClickListener(v -> {
-            new AlertDialog.Builder(this)
-                    .setTitle("Код приглашения")
-                    .setMessage("Отправьте этот код другу: " + InviteCodeUtil.encode(groupId))
-                    .setPositiveButton("ОК", null)
-                    .show();
         });
 
         findViewById(R.id.btnLeaveGroup).setOnClickListener(v -> {
