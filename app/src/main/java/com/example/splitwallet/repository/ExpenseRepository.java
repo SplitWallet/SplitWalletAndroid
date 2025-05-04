@@ -36,7 +36,11 @@ public class ExpenseRepository {
     private final ApiService apiService;
     private final CurrencyConverter currencyConverter;
 
-
+    // Для тестов
+    public ExpenseRepository(ApiService apiService, CurrencyConverter currencyConverter) {
+        this.apiService = apiService;
+        this.currencyConverter = currencyConverter;
+    }
     public ExpenseRepository() {
         apiService = RetrofitClient.getRetrofitInstance().create(ApiService.class);
         currencyConverter = new CurrencyConverter();
