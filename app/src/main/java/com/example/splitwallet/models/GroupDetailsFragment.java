@@ -16,6 +16,7 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.AlertDialog;
 import androidx.fragment.app.Fragment;
+import androidx.lifecycle.Observer;
 import androidx.lifecycle.ViewModelProvider;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
@@ -26,6 +27,7 @@ import com.example.splitwallet.ui.MemberDetailsActivity;
 import com.example.splitwallet.ui.MembersAdapter;
 import com.example.splitwallet.viewmodels.GroupViewModel;
 
+import java.util.List;
 import java.util.Objects;
 
 public class GroupDetailsFragment extends Fragment {
@@ -170,36 +172,62 @@ public class GroupDetailsFragment extends Fragment {
                 .show();
     }
 
+    private AlertDialog settleUpDialog;
     private void showSettleUpDialog() {
         String token = getAuthToken();
-        if (token != null) {
-            groupViewModel.loadGroupBalances(groupId, token);
-        }
+        if (token == null) return;
 
         AlertDialog.Builder builder = new AlertDialog.Builder(requireContext());
-        builder.setTitle("Settle Up");
-
-        // Создаем View для диалога
         View dialogView = LayoutInflater.from(requireContext())
                 .inflate(R.layout.dialog_settle_up, null);
         builder.setView(dialogView);
+        builder.setTitle("Settle Up - " + groupName);
+
+        Button btnClose = dialogView.findViewById(R.id.btnClose);
+        btnClose.setOnClickListener(v -> {
+            if (settleUpDialog != null && settleUpDialog.isShowing()) {
+                settleUpDialog.dismiss();
+            }
+        });
 
         RecyclerView recyclerView = dialogView.findViewById(R.id.balancesRecyclerView);
         recyclerView.setLayoutManager(new LinearLayoutManager(requireContext()));
 
-        AlertDialog dialog = builder.create();
+        settleUpDialog = builder.create();
 
-        groupViewModel.getGroupBalancesLiveData().observe(getViewLifecycleOwner(), balances -> {
-            if (balances != null) {
-                BalanceAdapter adapter = new BalanceAdapter(balances);
-                recyclerView.setAdapter(adapter);
-            } else {
-                Toast.makeText(getContext(), "Failed to load balances", Toast.LENGTH_SHORT).show();
-                dialog.dismiss();
+        Observer<List<Balance>> balancesObserver = new Observer<List<Balance>>() {
+            @Override
+            public void onChanged(List<Balance> balances) {
+                if (balances != null) {
+                    BalanceAdapter adapter = new BalanceAdapter(balances);
+                    recyclerView.setAdapter(adapter);
+                } else {
+                    if (settleUpDialog != null && settleUpDialog.isShowing()) {
+                        settleUpDialog.dismiss();
+                    }
+                    Toast.makeText(getContext(), "Failed to load balances", Toast.LENGTH_SHORT).show();
+                }
             }
+        };
+
+        groupViewModel.getGroupBalancesLiveData().observe(getViewLifecycleOwner(), balancesObserver);
+
+        settleUpDialog.setOnDismissListener(dialog -> {
+            groupViewModel.getGroupBalancesLiveData().removeObserver(balancesObserver);
         });
 
-        dialog.show();
+        settleUpDialog.show();
+
+        groupViewModel.loadGroupBalances(groupId, token);
+    }
+
+    @Override
+    public void onDestroyView() {
+        if (settleUpDialog != null && settleUpDialog.isShowing()) {
+            settleUpDialog.dismiss();
+            settleUpDialog = null;
+        }
+        super.onDestroyView();
     }
 
     private String getCurrentUserId() {

@@ -8,6 +8,7 @@ import com.example.splitwallet.models.Expense;
 import com.example.splitwallet.models.ExpenseUser;
 import com.example.splitwallet.models.GoogleLoginRequest;
 import com.example.splitwallet.models.Group;
+import com.example.splitwallet.models.GroupBalancesResponse;
 import com.example.splitwallet.models.JWTtoken;
 import com.example.splitwallet.models.LoginRequest;
 import com.example.splitwallet.models.RegisterRequest;
@@ -118,12 +119,11 @@ public interface ApiService {
             @Header("Authorization") String authToken
     );
 
-    @GET("expensesuser-service/groups/{groupId}/debts")
-    Call<List<Balance>> getGroupDebts(
+    @GET("expensesuser-service/group/{groupId}/debts")
+    Call<GroupBalancesResponse> getGroupDebts(
             @Path("groupId") Long groupId,
             @Header("Authorization") String authToken
     );
-
     @DELETE("groups-service/groups/{id}")
     Call<Void> deleteGroup(
             @Header("Authorization") String token,

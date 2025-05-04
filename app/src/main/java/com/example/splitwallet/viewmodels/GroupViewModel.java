@@ -10,6 +10,7 @@ import com.example.splitwallet.api.ApiService;
 import com.example.splitwallet.api.RetrofitClient;
 import com.example.splitwallet.models.Balance;
 import com.example.splitwallet.models.Group;
+import com.example.splitwallet.models.GroupBalancesResponse;
 import com.example.splitwallet.models.JWTtoken;
 import com.example.splitwallet.models.User;
 import com.example.splitwallet.repository.GroupRepository;
@@ -158,21 +159,19 @@ public class GroupViewModel extends ViewModel {
 
     public void loadGroupBalances(Long groupId, String token) {
         ApiService apiService = RetrofitClient.getRetrofitInstance().create(ApiService.class);
-        apiService.getGroupDebts(groupId, "Bearer " + token).enqueue(new Callback<List<Balance>>() {
+        apiService.getGroupDebts(groupId, "Bearer "+token).enqueue(new Callback<GroupBalancesResponse>() {
             @Override
-            public void onResponse(Call<List<Balance>> call, Response<List<Balance>> response) {
-                if (response.isSuccessful()) {
-                    groupBalancesLiveData.postValue(response.body());
+            public void onResponse(Call<GroupBalancesResponse> call, Response<GroupBalancesResponse> response) {
+                if (response.isSuccessful() && response.body() != null) {
+                    groupBalancesLiveData.postValue(response.body().getBalances());
                 } else {
                     groupBalancesLiveData.postValue(null);
-                    errorLiveData.postValue("Failed to load balances");
                 }
             }
 
             @Override
-            public void onFailure(Call<List<Balance>> call, Throwable t) {
+            public void onFailure(Call<GroupBalancesResponse> call, Throwable t) {
                 groupBalancesLiveData.postValue(null);
-                errorLiveData.postValue("Network error: " + t.getMessage());
             }
         });
     }
