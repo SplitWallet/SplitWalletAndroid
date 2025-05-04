@@ -1,6 +1,7 @@
 package com.example.splitwallet.api;
 
 
+import com.example.splitwallet.models.Balance;
 import com.example.splitwallet.models.CreateExpenseRequest;
 import com.example.splitwallet.models.CreateGroupRequest;
 import com.example.splitwallet.models.Expense;
@@ -114,6 +115,12 @@ public interface ApiService {
             @Path("groupId") Long groupId,
             @Path("expenseId") Long expenseId,
             @Path("userId") String userId,
+            @Header("Authorization") String authToken
+    );
+
+    @GET("expensesuser-service/groups/{groupId}/debts")
+    Call<List<Balance>> getGroupDebts(
+            @Path("groupId") Long groupId,
             @Header("Authorization") String authToken
     );
 

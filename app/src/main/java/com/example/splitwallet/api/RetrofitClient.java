@@ -25,7 +25,7 @@ import retrofit2.converter.simplexml.SimpleXmlConverterFactory;
 
 @SuppressLint("NewApi")
 public class RetrofitClient {
-    private static final String BASE_URL = "http://192.168.109.178:8080/"; // 192.168.0.15 win
+    private static final String BASE_URL = "http://192.168.109.52:8080/"; // 192.168.0.15 win
     private static Retrofit retrofit = null;
 
     public static Retrofit getRetrofitInstance() {

@@ -33,6 +33,7 @@ public class GroupDetailsFragment extends Fragment {
     private String groupName;
     private GroupViewModel groupViewModel;
     private MembersAdapter adapter;
+    private Button btnSettleUp;
 
     public static GroupDetailsFragment newInstance(Long groupId, String groupName) {
         GroupDetailsFragment fragment = new GroupDetailsFragment();
@@ -61,6 +62,8 @@ public class GroupDetailsFragment extends Fragment {
         RecyclerView membersRecyclerView = view.findViewById(R.id.membersRecyclerView);
         Button btnInvite = view.findViewById(R.id.btnInvite);
         Button btnLeaveGroup = view.findViewById(R.id.btnLeaveGroup);
+        btnSettleUp = view.findViewById(R.id.btnSettleUp);
+        btnSettleUp.setOnClickListener(v -> showSettleUpDialog());
 
         adapter = new MembersAdapter();
         adapter.setListener(this::onMemberClick);
@@ -165,6 +168,38 @@ public class GroupDetailsFragment extends Fragment {
                 })
                 .setNegativeButton("Отмена", null)
                 .show();
+    }
+
+    private void showSettleUpDialog() {
+        String token = getAuthToken();
+        if (token != null) {
+            groupViewModel.loadGroupBalances(groupId, token);
+        }
+
+        AlertDialog.Builder builder = new AlertDialog.Builder(requireContext());
+        builder.setTitle("Settle Up");
+
+        // Создаем View для диалога
+        View dialogView = LayoutInflater.from(requireContext())
+                .inflate(R.layout.dialog_settle_up, null);
+        builder.setView(dialogView);
+
+        RecyclerView recyclerView = dialogView.findViewById(R.id.balancesRecyclerView);
+        recyclerView.setLayoutManager(new LinearLayoutManager(requireContext()));
+
+        AlertDialog dialog = builder.create();
+
+        groupViewModel.getGroupBalancesLiveData().observe(getViewLifecycleOwner(), balances -> {
+            if (balances != null) {
+                BalanceAdapter adapter = new BalanceAdapter(balances);
+                recyclerView.setAdapter(adapter);
+            } else {
+                Toast.makeText(getContext(), "Failed to load balances", Toast.LENGTH_SHORT).show();
+                dialog.dismiss();
+            }
+        });
+
+        dialog.show();
     }
 
     private String getCurrentUserId() {

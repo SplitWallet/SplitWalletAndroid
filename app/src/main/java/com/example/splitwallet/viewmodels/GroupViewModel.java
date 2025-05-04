@@ -6,6 +6,9 @@ import androidx.lifecycle.LiveData;
 import androidx.lifecycle.MutableLiveData;
 import androidx.lifecycle.ViewModel;
 
+import com.example.splitwallet.api.ApiService;
+import com.example.splitwallet.api.RetrofitClient;
+import com.example.splitwallet.models.Balance;
 import com.example.splitwallet.models.Group;
 import com.example.splitwallet.models.JWTtoken;
 import com.example.splitwallet.models.User;
@@ -16,6 +19,9 @@ import java.util.ArrayList;
 import java.util.List;
 
 import lombok.Getter;
+import retrofit2.Call;
+import retrofit2.Callback;
+import retrofit2.Response;
 
 public class GroupViewModel extends ViewModel {
     private final GroupRepository groupRepository = new GroupRepository();
@@ -27,6 +33,7 @@ public class GroupViewModel extends ViewModel {
     private final MutableLiveData<String> errorLiveData = new MutableLiveData<>();
     private final MutableLiveData<Boolean> groupDeleted = new MutableLiveData<>();
     private final MutableLiveData<Boolean> leftGroupLiveData = new MutableLiveData<>();
+    private final MutableLiveData<List<Balance>> groupBalancesLiveData = new MutableLiveData<>();
     private MutableLiveData<JWTtoken> tokenLiveData;
 
     private final MutableLiveData<String> inviteCodeLiveData = new MutableLiveData<>();
@@ -141,6 +148,31 @@ public class GroupViewModel extends ViewModel {
             @Override
             public void onError(String errorMessage) {
                 errorLiveData.postValue(errorMessage);
+            }
+        });
+    }
+
+    public LiveData<List<Balance>> getGroupBalancesLiveData() {
+        return groupBalancesLiveData;
+    }
+
+    public void loadGroupBalances(Long groupId, String token) {
+        ApiService apiService = RetrofitClient.getRetrofitInstance().create(ApiService.class);
+        apiService.getGroupDebts(groupId, "Bearer " + token).enqueue(new Callback<List<Balance>>() {
+            @Override
+            public void onResponse(Call<List<Balance>> call, Response<List<Balance>> response) {
+                if (response.isSuccessful()) {
+                    groupBalancesLiveData.postValue(response.body());
+                } else {
+                    groupBalancesLiveData.postValue(null);
+                    errorLiveData.postValue("Failed to load balances");
+                }
+            }
+
+            @Override
+            public void onFailure(Call<List<Balance>> call, Throwable t) {
+                groupBalancesLiveData.postValue(null);
+                errorLiveData.postValue("Network error: " + t.getMessage());
             }
         });
     }

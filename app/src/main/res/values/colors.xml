@@ -15,5 +15,9 @@
     <color name="background">#FFFFFFFF</color>
     <color name="secondary">#6200EE</color>
 
+    <color name="colorPositive">#4CAF50</color>
+    <color name="colorNegative">#F44336</color>
+    <color name="colorNeutral">#9E9E9E</color>
+
 
 </resources>
