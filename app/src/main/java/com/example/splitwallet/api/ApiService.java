@@ -39,6 +39,12 @@ public interface ApiService {
     @POST("auth-service/login/google")
     Call<JWTtoken> loginWithGoogle(@Body GoogleLoginRequest googleLoginRequest);
 
+    @POST("auth-service/users/fcm-token")
+    Call<Void> updateFcmToken(
+            @Header("Authorization") String authToken,
+            @Body String fcmToken
+    );
+
     @POST("groups-service/groups/create")
     Call<Group> createGroup(
             @Header("Authorization") String authToken,

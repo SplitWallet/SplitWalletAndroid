@@ -8,9 +8,12 @@ import com.example.splitwallet.ui.GroupPagerActivity;
 import com.example.splitwallet.ui.JoinGroupActivity;
 import com.example.splitwallet.ui.LoginActivity;
 
+import android.app.NotificationChannel;
+import android.app.NotificationManager;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
 import android.util.Base64;
@@ -66,6 +69,7 @@ public class MainActivity extends AppCompatActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        createNotificationChannel();
 
         // Проверка авторизации
         if (!isUserLoggedIn()) {
@@ -166,6 +170,18 @@ public class MainActivity extends AppCompatActivity {
 
             }
         });
+    }
+    private void createNotificationChannel() {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            CharSequence name = "Expenses Notifications";
+            String description = "Notifications about new expenses in groups";
+            int importance = NotificationManager.IMPORTANCE_DEFAULT;
+            NotificationChannel channel = new NotificationChannel("expenses_channel", name, importance);
+            channel.setDescription(description);
+
+            NotificationManager notificationManager = getSystemService(NotificationManager.class);
+            notificationManager.createNotificationChannel(channel);
+        }
     }
 
     @Override
