@@ -60,6 +60,7 @@ dependencies {
     implementation(libs.activity)
     implementation(libs.swiperefreshlayout)
     implementation(libs.recyclerview)
+    implementation(libs.ui.text.android)
     testImplementation(libs.junit)
     androidTestImplementation(libs.ext.junit)
     androidTestImplementation(libs.espresso.core)
@@ -108,4 +109,7 @@ dependencies {
     // Firebase SDK
     implementation ("com.google.firebase:firebase-messaging:23.0.0")
     implementation ("com.google.firebase:firebase-analytics:21.0.0")
+
+    // iTextPdf
+    implementation ("com.itextpdf:itextg:5.5.10")
 }

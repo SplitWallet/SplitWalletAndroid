@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<paths>
+    <!-- Для внешнего хранилища -->
+    <external-path name="external_storage" path="." />
+
+    <!-- Для папки Documents -->
+    <external-files-path name="documents" path="Documents/" />
+
+    <!-- Для кэша -->
+    <cache-path name="cache" path="." />
+
+    <!-- Для файлов внутри приложения -->
+    <files-path name="files" path="." />
+</paths>

@@ -1,10 +1,26 @@
 package com.example.splitwallet.models;
 
+import android.app.ProgressDialog;
+import android.content.Intent;
+import android.content.pm.PackageManager;
+import android.net.Uri;
+
+import com.example.splitwallet.utils.DataUtils;
+import com.example.splitwallet.utils.PdfReportGenerator;
+import com.example.splitwallet.ui.ReportViewerActivity;
+import java.io.File;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Map;
 import static android.content.Context.MODE_PRIVATE;
+
+import static com.example.splitwallet.utils.DataUtils.convertMembersToMap;
 
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.os.Bundle;
+import android.os.Handler;
+import android.os.Looper;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -15,6 +31,7 @@ import android.widget.Toast;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.AlertDialog;
+import androidx.core.content.FileProvider;
 import androidx.fragment.app.Fragment;
 import androidx.lifecycle.Observer;
 import androidx.lifecycle.ViewModelProvider;
@@ -25,17 +42,24 @@ import com.example.splitwallet.R;
 import com.example.splitwallet.ui.LoginActivity;
 import com.example.splitwallet.ui.MemberDetailsActivity;
 import com.example.splitwallet.ui.MembersAdapter;
+import com.example.splitwallet.viewmodels.ExpenseViewModel;
 import com.example.splitwallet.viewmodels.GroupViewModel;
 
 import java.util.List;
 import java.util.Objects;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 public class GroupDetailsFragment extends Fragment {
     private Long groupId;
     private String groupName;
     private GroupViewModel groupViewModel;
+
+    private ExpenseViewModel expenseViewModel;
     private MembersAdapter adapter;
     private Button btnSettleUp;
+
+    private boolean isDataLoaded = false;
 
     public static GroupDetailsFragment newInstance(Long groupId, String groupName) {
         GroupDetailsFragment fragment = new GroupDetailsFragment();
@@ -54,6 +78,7 @@ public class GroupDetailsFragment extends Fragment {
             groupName = getArguments().getString("groupName");
         }
         groupViewModel = new ViewModelProvider(this).get(GroupViewModel.class);
+        expenseViewModel = new ViewModelProvider(this).get(ExpenseViewModel.class);
     }
 
     @Override
@@ -172,12 +197,14 @@ public class GroupDetailsFragment extends Fragment {
                 .show();
     }
 
+
     private AlertDialog settleUpDialog;
     private void showSettleUpDialog() {
         String token = getAuthToken();
         if (token == null) return;
 
         AlertDialog.Builder builder = new AlertDialog.Builder(requireContext());
+        builder.setTitle("Settle Up");
         View dialogView = LayoutInflater.from(requireContext())
                 .inflate(R.layout.dialog_settle_up, null);
         builder.setView(dialogView);
@@ -188,6 +215,11 @@ public class GroupDetailsFragment extends Fragment {
             if (settleUpDialog != null && settleUpDialog.isShowing()) {
                 settleUpDialog.dismiss();
             }
+        });
+
+        Button btnPdf = dialogView.findViewById(R.id.btnPdf);
+        btnPdf.setOnClickListener(v -> {
+            generateAndShowReport();
         });
 
         RecyclerView recyclerView = dialogView.findViewById(R.id.balancesRecyclerView);
@@ -252,4 +284,190 @@ public class GroupDetailsFragment extends Fragment {
         }
         return null;
     }
+
+
+    private Map<String, Double> calculateBalances() {
+        Map<String, Double> balances = new HashMap<>();
+
+        // Получаем список расходов
+        List<Expense> expenses = expenseViewModel.getExpensesLiveData().getValue();
+        if (expenses == null || expenses.isEmpty()) {
+            return balances;
+        }
+
+        // Получаем список участников
+        List<UserResponse> members = groupViewModel.getGroupMembersLiveData().getValue();
+        if (members == null || members.isEmpty()) {
+            return balances;
+        }
+
+        // Инициализируем балансы для всех участников
+        for (UserResponse member : members) {
+            balances.put(member.getName(), 0.0);
+        }
+
+        // Обрабатываем каждый расход
+        for (Expense expense : expenses) {
+            String paidBy = expense.getUserWhoCreatedId();
+            double amount = expense.getAmount();
+
+            // Находим пользователя, который оплатил расход
+            UserResponse payer = null;
+            for (UserResponse member : members) {
+                if (member.getId().equals(paidBy)) {
+                    payer = member;
+                    break;
+                }
+            }
+
+            if (payer == null) continue;
+
+            // Получаем список участников расхода и их доли
+            List<ExpenseUser> participants = expenseViewModel.getExpenseUsersLiveData().getValue();
+            if (participants == null || participants.isEmpty()) {
+                // Если нет информации о распределении, считаем что делится поровну на всех
+                int memberCount = members.size();
+                double share = amount / memberCount;
+
+                // Увеличиваем баланс плательщика
+                balances.put(payer.getName(), balances.get(payer.getName()) + amount);
+
+                // Уменьшаем балансы всех участников
+                for (UserResponse member : members) {
+                    if (!member.getId().equals(paidBy)) {
+                        balances.put(member.getName(), balances.get(member.getName()) - share);
+                    }
+                }
+            } else {
+                // Если есть информация о распределении, используем ее
+                for (ExpenseUser participant : participants) {
+                    UserResponse user = null;
+                    for (UserResponse member : members) {
+                        if (member.getId().equals(participant.getUserId())) {
+                            user = member;
+                            break;
+                        }
+                    }
+
+                    if (user != null) {
+                        double share = participant.getAmount();
+                        if (user.getId().equals(paidBy)) {
+                            // Плательщик получает всю сумму
+                            balances.put(user.getName(), balances.get(user.getName()) + amount);
+                        } else {
+                            // Участник платит свою долю
+                            balances.put(user.getName(), balances.get(user.getName()) - share);
+                        }
+                    }
+                }
+            }
+        }
+
+        return balances;
+    }
+
+    private void showReportOptions() {
+        AlertDialog.Builder builder = new AlertDialog.Builder(requireContext());
+        builder.setTitle("Генерация отчета");
+
+        if (!isDataLoaded) {
+            builder.setMessage("Данные еще не загружены. Загрузить сейчас?");
+            builder.setPositiveButton("Загрузить", (dialog, which) -> {
+                loadData();
+                Toast.makeText(getContext(), "Данные загружаются...", Toast.LENGTH_SHORT).show();
+            });
+        } else {
+            builder.setMessage("Сгенерировать отчет по текущим данным?");
+            builder.setPositiveButton("Создать отчет", (dialog, which) -> {
+                generateAndShowReport();
+            });
+        }
+
+        builder.setNegativeButton("Отмена", null);
+        builder.show();
+    }
+
+    private void loadData() {
+        String token = getAuthToken();
+        if (token != null) {
+            expenseViewModel.loadExpenses(groupId, token);
+            groupViewModel.loadGroupMembers(groupId, token);
+            expenseViewModel.getExpensesLiveData().observe(getViewLifecycleOwner(), expenses -> {
+                Log.d("ExpensesLoad", "Data received, size: " + (expenses != null ? expenses.size() : 0));
+            });
+        }
+    }
+
+    private void generateAndShowReport() {
+        ProgressDialog progressDialog = new ProgressDialog(getContext());
+        progressDialog.setMessage("Generating report...");
+        progressDialog.setCancelable(false);
+        progressDialog.show();
+
+        // 1. Сначала загружаем данные в UI потоке
+        String token = getAuthToken();
+        expenseViewModel.loadExpenses(groupId, token);
+        groupViewModel.loadGroupMembers(groupId, token);
+
+        // 2. Подписываемся на LiveData в UI потоке
+        expenseViewModel.getExpensesLiveData().observe(getViewLifecycleOwner(), expenses -> {
+            groupViewModel.getGroupMembersLiveData().observe(getViewLifecycleOwner(), members -> {
+                if (expenses == null || members == null) {
+                    progressDialog.dismiss();
+                    Toast.makeText(getContext(), "Data not loaded", Toast.LENGTH_SHORT).show();
+                    return;
+                }
+
+                // 3. Запускаем генерацию PDF в фоновом потоке
+                ExecutorService executor = Executors.newSingleThreadExecutor();
+                executor.execute(() -> {
+                    try {
+                        Map<String, Double> balances = calculateBalances();
+
+                        File pdfFile = PdfReportGenerator.generateExpenseReport(
+                                requireContext().getApplicationContext(),
+                                groupName,
+                                expenses,
+                                convertMembersToMap(members),
+                                balances
+                        );
+
+                        requireActivity().runOnUiThread(() -> {
+                            progressDialog.dismiss();
+                            if (pdfFile != null && pdfFile.exists()) {
+                                Uri uri = FileProvider.getUriForFile(
+                                        requireContext(),
+                                        "com.example.splitwallet.fileprovider",
+                                        pdfFile
+                                );
+
+                                Intent intent = new Intent(Intent.ACTION_VIEW);
+                                intent.setDataAndType(uri, "application/pdf");
+                                intent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
+                                intent.addFlags(Intent.FLAG_ACTIVITY_NO_HISTORY);
+
+                                // Проверяем наличие приложения для просмотра PDF
+                                PackageManager pm = requireContext().getPackageManager();
+                                if (intent.resolveActivity(pm) != null) {
+                                    startActivity(intent);
+                                } else {
+                                    Toast.makeText(getContext(), "No PDF viewer installed", Toast.LENGTH_SHORT).show();
+                                }
+                                startActivity(intent);
+                            } else {
+                                Toast.makeText(getContext(), "Report generation failed", Toast.LENGTH_SHORT).show();
+                            }
+                        });
+                    } catch (Exception e) {
+                        requireActivity().runOnUiThread(() -> {
+                            progressDialog.dismiss();
+                            Toast.makeText(getContext(), "Error: " + e.getMessage(), Toast.LENGTH_LONG).show();
+                            Log.e("ReportError", e.getMessage(), e);
+                        });
+                    }
+                });
+            });
+        });
+    }
+
 }

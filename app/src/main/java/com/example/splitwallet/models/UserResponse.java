@@ -3,7 +3,7 @@ package com.example.splitwallet.models;
 import lombok.Getter;
 
 @Getter
-public class UserResponse {
+public class UserResponse extends User {
     private String id;
     private String name;
     private String email;

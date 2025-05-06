@@ -18,12 +18,14 @@ import com.example.splitwallet.models.UserResponse;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
 import lombok.Getter;
 import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
-
+import java.util.HashMap;
+import java.util.Map;
 public class GroupViewModel extends ViewModel {
     private final GroupRepository groupRepository = new GroupRepository();
 
@@ -175,5 +177,6 @@ public class GroupViewModel extends ViewModel {
             }
         });
     }
+
 
 }
