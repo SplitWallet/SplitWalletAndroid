@@ -1,7 +1,6 @@
 package com.example.splitwallet.api;
 
 
-import com.example.splitwallet.models.Balance;
 import com.example.splitwallet.models.CreateExpenseRequest;
 import com.example.splitwallet.models.CreateGroupRequest;
 import com.example.splitwallet.models.Expense;
@@ -11,10 +10,11 @@ import com.example.splitwallet.models.Group;
 import com.example.splitwallet.models.GroupBalancesResponse;
 import com.example.splitwallet.models.JWTtoken;
 import com.example.splitwallet.models.LoginRequest;
+import com.example.splitwallet.models.NotificationRequest;
 import com.example.splitwallet.models.RegisterRequest;
+import com.example.splitwallet.models.TokenRequest;
 import com.example.splitwallet.models.UpdateExpenseRequest;
 import com.example.splitwallet.models.User;
-import com.example.splitwallet.models.UserResponse;
 
 import java.util.List;
 
@@ -27,7 +27,6 @@ import retrofit2.http.Header;
 import retrofit2.http.POST;
 import retrofit2.http.PUT;
 import retrofit2.http.Path;
-import retrofit2.http.Query;
 
 public interface ApiService {
     @POST("auth-service/login")
@@ -39,10 +38,18 @@ public interface ApiService {
     @POST("auth-service/login/google")
     Call<JWTtoken> loginWithGoogle(@Body GoogleLoginRequest googleLoginRequest);
 
-    @POST("auth-service/users/fcm-token")
+    @POST("notification-service/{userId}/tokens")
     Call<Void> updateFcmToken(
             @Header("Authorization") String authToken,
-            @Body String fcmToken
+            @Path("userId") String userId,
+            @Body TokenRequest tokenRequest
+    );
+
+    @POST("notification-service/{userId}/notifications")
+    Call<Void> sendNotification(
+            @Header("Authorization") String authToken,
+            @Path("userId") String userId,
+            @Body NotificationRequest notificationRequest
     );
 
     @POST("groups-service/groups/create")

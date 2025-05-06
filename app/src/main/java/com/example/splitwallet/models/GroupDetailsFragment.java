@@ -21,14 +21,23 @@ import androidx.lifecycle.ViewModelProvider;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
+import com.example.splitwallet.MainActivity;
 import com.example.splitwallet.R;
+import com.example.splitwallet.api.ApiService;
+import com.example.splitwallet.api.RetrofitClient;
 import com.example.splitwallet.ui.LoginActivity;
 import com.example.splitwallet.ui.MemberDetailsActivity;
 import com.example.splitwallet.ui.MembersAdapter;
 import com.example.splitwallet.viewmodels.GroupViewModel;
+import com.google.firebase.FirebaseApp;
+import com.google.firebase.messaging.FirebaseMessaging;
 
 import java.util.List;
 import java.util.Objects;
+
+import retrofit2.Call;
+import retrofit2.Callback;
+import retrofit2.Response;
 
 public class GroupDetailsFragment extends Fragment {
     private Long groupId;
@@ -49,6 +58,7 @@ public class GroupDetailsFragment extends Fragment {
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+
         if (getArguments() != null) {
             groupId = getArguments().getLong("groupId");
             groupName = getArguments().getString("groupName");
@@ -76,6 +86,39 @@ public class GroupDetailsFragment extends Fragment {
 
         btnInvite.setOnClickListener(v -> showInviteDialog());
         btnLeaveGroup.setOnClickListener(v -> showLeaveGroupDialog());
+
+        FirebaseMessaging.getInstance().getToken()
+                .addOnCompleteListener(task -> {
+                    if (!task.isSuccessful()) {
+                        Log.w("FCM", "Получение токена не удалось", task.getException());
+                        return;
+                    }
+                    String token = task.getResult();
+                    Log.d("FCM", "FCM токен: " + token);
+                    // Отправьте токен на сервер
+                });
+        sendTokenToServer(getAuthToken(), getCurrentUserId());
+        Button testNotificationBtn = view.findViewById(R.id.btnTestNotification);
+        testNotificationBtn.setOnClickListener(v -> {
+            String userId = getCurrentUserId();
+            String title = "Тестовое уведомление";
+            String body = "Проверка работы из приложения";
+
+            NotificationRequest notificationRequest = new NotificationRequest();
+            ApiService api = RetrofitClient.getRetrofitInstance().create(ApiService.class);
+            api.sendNotification("Bearer " + getAuthToken(), userId, notificationRequest).enqueue(new Callback<Void>() {
+                @Override
+                public void onResponse(Call<Void> call, Response<Void> response) {
+                    Toast.makeText(getContext(), "Уведомление отправлено", Toast.LENGTH_SHORT).show();
+                }
+
+                @Override
+                public void onFailure(Call<Void> call, Throwable t) {
+                    Toast.makeText(getContext(), "Ошибка отправки", Toast.LENGTH_SHORT).show();
+                }
+            });
+        });
+
 
         //  Подписка на выход из группы
         groupViewModel.getLeftGroupLiveData().observe(getViewLifecycleOwner(), success -> {
@@ -251,5 +294,26 @@ public class GroupDetailsFragment extends Fragment {
             Log.e("JWT_ERROR", "Ошибка извлечения userId из токена", e);
         }
         return null;
+    }
+
+    private void sendTokenToServer(String authToken, String userId){
+        ApiService apiService = RetrofitClient.getRetrofitInstance().create(ApiService.class);
+        TokenRequest tokenRequest = new TokenRequest(authToken);
+
+        Call<Void> call = apiService.updateFcmToken("Bearer " + authToken, userId, tokenRequest);
+        call.enqueue(new Callback<Void>() {
+            @Override
+            public void onResponse(Call<Void> call, Response<Void> response) {
+                if (!response.isSuccessful()) {
+                    Log.e("FCM", "Failed to send token to server. Code: " + response.code());
+                }
+            }
+
+            @Override
+            public void onFailure(Call<Void> call, Throwable t) {
+                Log.e("FCM", "Failed to send token to server", t);
+            }
+        });
+
     }
 }
