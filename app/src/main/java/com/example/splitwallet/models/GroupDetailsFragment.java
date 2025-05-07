@@ -95,9 +95,8 @@ public class GroupDetailsFragment extends Fragment {
                     }
                     String token = task.getResult();
                     Log.d("FCM", "FCM токен: " + token);
-                    // Отправьте токен на сервер
+                    sendTokenToServer(token, getCurrentUserId());
                 });
-        sendTokenToServer(getAuthToken(), getCurrentUserId());
         Button testNotificationBtn = view.findViewById(R.id.btnTestNotification);
         testNotificationBtn.setOnClickListener(v -> {
             String userId = getCurrentUserId();
