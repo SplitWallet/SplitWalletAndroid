@@ -8,9 +8,13 @@ import com.example.splitwallet.ui.GroupPagerActivity;
 import com.example.splitwallet.ui.JoinGroupActivity;
 import com.example.splitwallet.ui.LoginActivity;
 
+import android.app.NotificationChannel;
+import android.app.NotificationManager;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.content.pm.PackageManager;
+import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
 import android.util.Base64;
@@ -35,6 +39,8 @@ import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.core.app.ActivityCompat;
+import androidx.core.content.ContextCompat;
 import androidx.lifecycle.ViewModelProvider;
 import androidx.navigation.NavController;
 import androidx.navigation.Navigation;
@@ -56,6 +62,7 @@ import org.json.JSONObject;
 
 import java.nio.charset.StandardCharsets;
 import java.util.List;
+import android.Manifest;
 
 public class MainActivity extends AppCompatActivity {
 
@@ -66,6 +73,7 @@ public class MainActivity extends AppCompatActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        createNotificationChannel();
 
         // Проверка авторизации
         if (!isUserLoggedIn()) {
@@ -85,6 +93,9 @@ public class MainActivity extends AppCompatActivity {
 
         SharedPreferences sharedPreferences = getSharedPreferences("auth", MODE_PRIVATE);
         String token = sharedPreferences.getString("token", null);
+        checkAndRequestNotificationPermission();
+        createNotificationChannel();
+
 
         if (token != null) {
             Pair<String, String> userData = parseJwt(token); // логин, email
@@ -166,6 +177,69 @@ public class MainActivity extends AppCompatActivity {
 
             }
         });
+    }
+    private void createNotificationChannel() {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            CharSequence name = "Expenses Notifications";
+            String description = "Notifications about new expenses in groups";
+            int importance = NotificationManager.IMPORTANCE_DEFAULT;
+            NotificationChannel channel = new NotificationChannel("expenses_channel", name, importance);
+            channel.setDescription(description);
+
+            NotificationManager notificationManager = getSystemService(NotificationManager.class);
+            notificationManager.createNotificationChannel(channel);
+        }
+    }
+    // Константа для идентификатора запроса
+    private static final int NOTIFICATION_PERMISSION_REQUEST_CODE = 1001;
+
+    // Метод для проверки и запроса разрешения
+    private void checkAndRequestNotificationPermission() {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            if (ContextCompat.checkSelfPermission(this,
+                    Manifest.permission.POST_NOTIFICATIONS)
+                    != PackageManager.PERMISSION_GRANTED) {
+
+                // Объяснение перед запросом (опционально)
+                if (ActivityCompat.shouldShowRequestPermissionRationale(this,
+                        Manifest.permission.POST_NOTIFICATIONS)) {
+                    // Показать объяснение (диалог или Snackbar)
+                    new AlertDialog.Builder(this)
+                            .setTitle("Нужно разрешение")
+                            .setMessage("Для показа уведомлений о расходах нужно дать разрешение")
+                            .setPositiveButton("OK", (dialog, which) -> {
+                                requestPermission();
+                            })
+                            .setNegativeButton("Отмена", null)
+                            .show();
+                } else {
+                    requestPermission();
+                }
+            }
+        }
+    }
+
+    private void requestPermission() {
+        ActivityCompat.requestPermissions(this,
+                new String[]{Manifest.permission.POST_NOTIFICATIONS},
+                NOTIFICATION_PERMISSION_REQUEST_CODE);
+    }
+
+    @Override
+    public void onRequestPermissionsResult(int requestCode,
+                                           @NonNull String[] permissions,
+                                           @NonNull int[] grantResults) {
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults);
+
+        if (requestCode == NOTIFICATION_PERMISSION_REQUEST_CODE) {
+            if (grantResults.length > 0 &&
+                    grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+                Log.d("MainActivity", "Notification permission granted");
+            } else {
+                Log.d("MainActivity", "Notification permission denied");
+                // Можно показать сообщение, что функционал уведомлений будет ограничен
+            }
+        }
     }
 
     @Override

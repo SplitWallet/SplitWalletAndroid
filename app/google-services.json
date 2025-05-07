@@ -1,21 +1,40 @@
 {
   "project_info": {
-    "project_number": "153751850385",
-    "project_id": "splitwallet-200ae",
-    "storage_bucket": "splitwallet-200ae.firebasestorage.app"
+    "project_number": "1074626659275",
+    "project_id": "splitewallettest",
+    "storage_bucket": "splitewallettest.firebasestorage.app"
   },
   "client": [
     {
       "client_info": {
-        "mobilesdk_app_id": "1:153751850385:android:4f910574549c18f95b5e30",
+        "mobilesdk_app_id": "1:1074626659275:android:de7e5d84145b5f990dac4e",
         "android_client_info": {
-          "package_name": "com.example.SplitWallet"
+          "package_name": "com.example.myapplication"
         }
       },
       "oauth_client": [],
       "api_key": [
         {
-          "current_key": "AIzaSyC6nb3zG8ZGM8tNLCoNZhw7j6eBXJEf4tM"
+          "current_key": "AIzaSyB8iqANkjbSp0H6ctpygflGhKs3mCdb4WY"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:1074626659275:android:c929f6c8a844796b0dac4e",
+        "android_client_info": {
+          "package_name": "com.example.splitwallet"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyB8iqANkjbSp0H6ctpygflGhKs3mCdb4WY"
         }
       ],
       "services": {
