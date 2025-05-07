@@ -48,6 +48,36 @@ public class MyFirebaseMessagingService extends FirebaseMessagingService {
         if (remoteMessage.getNotification() != null) {
             Log.d(TAG, "Тело уведомления: " + remoteMessage.getNotification().getBody());
             // Здесь можно показать уведомление пользователю
+            String title = remoteMessage.getNotification().getTitle();
+            String body = remoteMessage.getNotification().getBody();
+
+            // Создаем уведомление
+            NotificationCompat.Builder builder = new NotificationCompat.Builder(this, "expenses_channel")
+                    .setSmallIcon(R.drawable.ic_notification)
+                    .setContentTitle(title)
+                    .setContentText(body)
+                    .setPriority(NotificationCompat.PRIORITY_DEFAULT)
+                    .setAutoCancel(true);
+
+            // Добавляем действие при нажатии (открытие группы)
+            if (remoteMessage.getData().containsKey("groupId")) {
+                Intent intent = new Intent(this, GroupPagerActivity.class);
+                intent.putExtra("GROUP_ID", Long.parseLong(remoteMessage.getData().get("groupId")));
+                PendingIntent pendingIntent = PendingIntent.getActivity(this, 0, intent, PendingIntent.FLAG_IMMUTABLE);
+                builder.setContentIntent(pendingIntent);
+            }
+
+            if (ActivityCompat.checkSelfPermission(this, Manifest.permission.POST_NOTIFICATIONS) != PackageManager.PERMISSION_GRANTED) {
+                // TODO: Consider calling
+                //    ActivityCompat#requestPermissions
+                // here to request the missing permissions, and then overriding
+                //   public void onRequestPermissionsResult(int requestCode, String[] permissions,
+                //                                          int[] grantResults)
+                // to handle the case where the user grants the permission. See the documentation
+                // for ActivityCompat#requestPermissions for more details.
+                return;
+            }
+            NotificationManagerCompat.from(this).notify(1, builder.build());
         }
 
         if (remoteMessage.getData().size() > 0) {

@@ -95,7 +95,7 @@ public class GroupDetailsFragment extends Fragment {
                     }
                     String token = task.getResult();
                     Log.d("FCM", "FCM токен: " + token);
-                    sendTokenToServer(token, getCurrentUserId());
+                    sendTokenToServer(getAuthToken(),token, getCurrentUserId());
                 });
         Button testNotificationBtn = view.findViewById(R.id.btnTestNotification);
         testNotificationBtn.setOnClickListener(v -> {
@@ -295,9 +295,9 @@ public class GroupDetailsFragment extends Fragment {
         return null;
     }
 
-    private void sendTokenToServer(String authToken, String userId){
+    private void sendTokenToServer(String authToken, String fcmToken, String userId){
         ApiService apiService = RetrofitClient.getRetrofitInstance().create(ApiService.class);
-        TokenRequest tokenRequest = new TokenRequest(authToken);
+        TokenRequest tokenRequest = new TokenRequest(fcmToken);
 
         Call<Void> call = apiService.updateFcmToken("Bearer " + authToken, userId, tokenRequest);
         call.enqueue(new Callback<Void>() {

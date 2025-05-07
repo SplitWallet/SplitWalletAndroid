@@ -90,6 +90,8 @@ public class MainActivity extends AppCompatActivity {
         SharedPreferences sharedPreferences = getSharedPreferences("auth", MODE_PRIVATE);
         String token = sharedPreferences.getString("token", null);
 
+        createNotificationChannel();
+
         if (token != null) {
             Pair<String, String> userData = parseJwt(token); // логин, email
             if (userData != null) {
