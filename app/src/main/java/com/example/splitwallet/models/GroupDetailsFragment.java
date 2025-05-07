@@ -97,26 +97,6 @@ public class GroupDetailsFragment extends Fragment {
                     Log.d("FCM", "FCM токен: " + token);
                     sendTokenToServer(getAuthToken(),token, getCurrentUserId());
                 });
-        Button testNotificationBtn = view.findViewById(R.id.btnTestNotification);
-        testNotificationBtn.setOnClickListener(v -> {
-            String userId = getCurrentUserId();
-            String title = "Тестовое уведомление";
-            String body = "Проверка работы из приложения";
-
-            NotificationRequest notificationRequest = new NotificationRequest("hello", "pesos");
-            ApiService api = RetrofitClient.getRetrofitInstance().create(ApiService.class);
-            api.sendNotification("Bearer " + getAuthToken(), userId, notificationRequest).enqueue(new Callback<Void>() {
-                @Override
-                public void onResponse(Call<Void> call, Response<Void> response) {
-                    Toast.makeText(getContext(), "Уведомление отправлено", Toast.LENGTH_SHORT).show();
-                }
-
-                @Override
-                public void onFailure(Call<Void> call, Throwable t) {
-                    Toast.makeText(getContext(), "Ошибка отправки", Toast.LENGTH_SHORT).show();
-                }
-            });
-        });
 
 
         //  Подписка на выход из группы
