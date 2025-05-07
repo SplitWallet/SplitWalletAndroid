@@ -1,7 +1,5 @@
 package com.example.splitwallet.notification;
 
-import static java.security.AccessController.getContext;
-
 import android.Manifest;
 import android.app.PendingIntent;
 import android.content.Intent;
@@ -61,9 +59,9 @@ public class MyFirebaseMessagingService extends FirebaseMessagingService {
 
     public void sendNotification(String token, String userId, String title, String body) {
         ApiService apiService = RetrofitClient.getRetrofitInstance().create(ApiService.class);
-        NotificationRequest request = new NotificationRequest();
+        NotificationRequest request = new NotificationRequest("hello", "bois");
         request.setTitle(title);
-        request.setBody(body);
+        //request.setBody(body);
 
         apiService.sendNotification("Bearer " + token, userId, request).enqueue(new Callback<Void>() {
             @Override

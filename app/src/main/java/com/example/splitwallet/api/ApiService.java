@@ -38,14 +38,14 @@ public interface ApiService {
     @POST("auth-service/login/google")
     Call<JWTtoken> loginWithGoogle(@Body GoogleLoginRequest googleLoginRequest);
 
-    @POST("notification-service/{userId}/tokens")
+    @POST("notification-service/users/{userId}/tokens")
     Call<Void> updateFcmToken(
             @Header("Authorization") String authToken,
             @Path("userId") String userId,
             @Body TokenRequest tokenRequest
     );
 
-    @POST("notification-service/{userId}/notifications")
+    @POST("notification-service/users/{userId}/notifications")
     Call<Void> sendNotification(
             @Header("Authorization") String authToken,
             @Path("userId") String userId,

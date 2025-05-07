@@ -9,6 +9,11 @@ import lombok.Setter;
 @Setter
 public class NotificationRequest {
     private String title;
-    private String body;
-    private Map<String, String> data;
+    private String message;
+
+    public NotificationRequest(String title, String message)
+    {
+        this.title = title;
+        this.message = message;
+    }
 }

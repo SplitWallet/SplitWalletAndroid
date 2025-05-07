@@ -104,7 +104,7 @@ public class GroupDetailsFragment extends Fragment {
             String title = "Тестовое уведомление";
             String body = "Проверка работы из приложения";
 
-            NotificationRequest notificationRequest = new NotificationRequest();
+            NotificationRequest notificationRequest = new NotificationRequest("hello", "pesos");
             ApiService api = RetrofitClient.getRetrofitInstance().create(ApiService.class);
             api.sendNotification("Bearer " + getAuthToken(), userId, notificationRequest).enqueue(new Callback<Void>() {
                 @Override
