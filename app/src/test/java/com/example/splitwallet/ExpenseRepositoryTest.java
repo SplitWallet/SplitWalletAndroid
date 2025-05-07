@@ -61,24 +61,24 @@ public class ExpenseRepositoryTest {
         repository = new ExpenseRepository(apiService, currencyConverter);
     }
 
-//    @Test
-//    public void testGetExpenses_success() {
-//        Long groupId = 1L;
-//        String token = "test-token";
-//        ExpensesCallback callback = mock(ExpensesCallback.class);
-//
-//        when(apiService.getGroupExpenses(eq(groupId), anyString())).thenReturn(expenseListCall);
-//
-//        repository.getExpenses(groupId, token, callback);
-//        verify(expenseListCall).enqueue(expensesCallbackCaptor.capture());
-//
-//        List<Expense> mockExpenses = Arrays.asList(new Expense(), new Expense());
-//        Response<List<Expense>> response = Response.success(mockExpenses);
-//
-//        expensesCallbackCaptor.getValue().onResponse(expenseListCall, response);
-//
-//        verify(callback).onSuccess(mockExpenses);
-//    }
+    @Test
+    public void testGetExpenses_success() {
+        Long groupId = 1L;
+        String token = "test-token";
+        ExpensesCallback callback = mock(ExpensesCallback.class);
+
+        when(apiService.getGroupExpenses(eq(groupId), anyString())).thenReturn(expenseListCall);
+
+        repository.getExpenses(groupId, token, callback);
+        verify(expenseListCall).enqueue(expensesCallbackCaptor.capture());
+
+        List<Expense> mockExpenses = Arrays.asList(new Expense(), new Expense());
+        Response<List<Expense>> response = Response.success(mockExpenses);
+
+        expensesCallbackCaptor.getValue().onResponse(expenseListCall, response);
+
+        verify(callback).onSuccess(mockExpenses);
+    }
 
     @Test
     public void testGetExpenses_failure() {
