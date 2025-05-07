@@ -43,6 +43,9 @@ public class ExpenseViewModel extends ViewModel {
     public LiveData<String> getErrorLiveData() {
         return errorLiveData;
     }
+    public void clearError() {
+        errorLiveData.setValue(null);
+    }
     public LiveData<List<ExpenseUser>> getExpenseUsersLiveData() {
         return expenseUsersLiveData;
     }

@@ -158,6 +158,7 @@ public class ExpensesFragment extends Fragment {
             if (error != null) {
                 Toast.makeText(getContext(), error, Toast.LENGTH_SHORT).show();
                 swipeRefreshLayout.setRefreshing(false);
+                expenseViewModel.clearError();
             }
         });
     }
