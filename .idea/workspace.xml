@@ -57,10 +57,9 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="b33ed7c0-1935-459b-9682-e2688c3c2ad4" name="Changes" comment="push developing">
-      <change afterPath="$PROJECT_DIR$/app/src/main/java/com/example/splitwallet/notification/NotificationService.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/src/main/AndroidManifest.xml" beforeDir="false" afterPath="$PROJECT_DIR$/app/src/main/AndroidManifest.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/app/src/main/java/com/example/splitwallet/MainActivity.java" beforeDir="false" afterPath="$PROJECT_DIR$/app/src/main/java/com/example/splitwallet/MainActivity.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/app/src/main/java/com/example/splitwallet/models/GroupDetailsFragment.java" beforeDir="false" afterPath="$PROJECT_DIR$/app/src/main/java/com/example/splitwallet/models/GroupDetailsFragment.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/app/src/main/java/com/example/splitwallet/notification/MyFirebaseMessagingService.java" beforeDir="false" afterPath="$PROJECT_DIR$/app/src/main/java/com/example/splitwallet/notification/MyFirebaseMessagingService.java" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
@@ -106,6 +105,7 @@
         <option value="layoutResourceFile" />
         <option value="resourceFile" />
         <option value="Class" />
+        <option value="AnnotationType" />
       </list>
     </option>
   </component>
@@ -163,6 +163,9 @@
   }
 }</component>
   <component name="RecentsManager">
+    <key name="CreateClassDialog.RecentsKey">
+      <recent name="com.example.splitwallet.notification" />
+    </key>
     <key name="CopyFile.RECENT_KEYS">
       <recent name="$PROJECT_DIR$/app" />
     </key>
@@ -350,7 +353,15 @@
       <option name="project" value="LOCAL" />
       <updated>1746612884674</updated>
     </task>
-    <option name="localTasksCounter" value="9" />
+    <task id="LOCAL-00009" summary="push developing">
+      <option name="closed" value="true" />
+      <created>1746613920222</created>
+      <option name="number" value="00009" />
+      <option name="presentableId" value="LOCAL-00009" />
+      <option name="project" value="LOCAL" />
+      <updated>1746613920222</updated>
+    </task>
+    <option name="localTasksCounter" value="10" />
     <servers />
   </component>
   <component name="Vcs.Log.Tabs.Properties">

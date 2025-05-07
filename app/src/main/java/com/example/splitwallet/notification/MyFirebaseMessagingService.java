@@ -5,6 +5,7 @@ import android.app.PendingIntent;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
+import android.os.Build;
 import android.util.Log;
 import android.widget.Toast;
 
@@ -12,6 +13,7 @@ import androidx.annotation.NonNull;
 import androidx.core.app.ActivityCompat;
 import androidx.core.app.NotificationCompat;
 import androidx.core.app.NotificationManagerCompat;
+import androidx.core.content.ContextCompat;
 
 import com.example.splitwallet.R;
 import com.example.splitwallet.api.ApiService;
@@ -43,15 +45,23 @@ public class MyFirebaseMessagingService extends FirebaseMessagingService {
     @Override
     public void onMessageReceived(@NonNull RemoteMessage remoteMessage) {
         super.onMessageReceived(remoteMessage);
-        Log.d(TAG, "Получено сообщение от: " + remoteMessage.getFrom());
+        Log.d(TAG, "From: " + remoteMessage.getFrom());
 
         if (remoteMessage.getNotification() != null) {
-            Log.d(TAG, "Тело уведомления: " + remoteMessage.getNotification().getBody());
-            // Здесь можно показать уведомление пользователю
             String title = remoteMessage.getNotification().getTitle();
             String body = remoteMessage.getNotification().getBody();
+            Log.d(TAG, "Notification Received - Title: " + title + ", Body: " + body);
 
-            // Создаем уведомление
+            // 1. Проверка разрешений (Android 13+)
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+                if (checkSelfPermission(Manifest.permission.POST_NOTIFICATIONS)
+                        != PackageManager.PERMISSION_GRANTED) {
+                    Log.w(TAG, "No notification permission");
+                    return;
+                }
+            }
+
+            // 2. Создаем уведомление
             NotificationCompat.Builder builder = new NotificationCompat.Builder(this, "expenses_channel")
                     .setSmallIcon(R.drawable.ic_notification)
                     .setContentTitle(title)
@@ -59,32 +69,27 @@ public class MyFirebaseMessagingService extends FirebaseMessagingService {
                     .setPriority(NotificationCompat.PRIORITY_DEFAULT)
                     .setAutoCancel(true);
 
-            // Добавляем действие при нажатии (открытие группы)
+            // 3. Добавляем действие
             if (remoteMessage.getData().containsKey("groupId")) {
                 Intent intent = new Intent(this, GroupPagerActivity.class);
                 intent.putExtra("GROUP_ID", Long.parseLong(remoteMessage.getData().get("groupId")));
-                PendingIntent pendingIntent = PendingIntent.getActivity(this, 0, intent, PendingIntent.FLAG_IMMUTABLE);
+                PendingIntent pendingIntent = PendingIntent.getActivity(
+                        this,
+                        0,
+                        intent,
+                        PendingIntent.FLAG_UPDATE_CURRENT | PendingIntent.FLAG_IMMUTABLE
+                );
                 builder.setContentIntent(pendingIntent);
             }
 
-            if (ActivityCompat.checkSelfPermission(this, Manifest.permission.POST_NOTIFICATIONS) != PackageManager.PERMISSION_GRANTED) {
-                // TODO: Consider calling
-                //    ActivityCompat#requestPermissions
-                // here to request the missing permissions, and then overriding
-                //   public void onRequestPermissionsResult(int requestCode, String[] permissions,
-                //                                          int[] grantResults)
-                // to handle the case where the user grants the permission. See the documentation
-                // for ActivityCompat#requestPermissions for more details.
-                return;
+            // 4. Показываем уведомление
+            try {
+                NotificationManagerCompat.from(this).notify((int) System.currentTimeMillis(), builder.build());
+                Log.d(TAG, "Notification shown");
+            } catch (Exception e) {
+                Log.e(TAG, "Failed to show notification", e);
             }
-            NotificationManagerCompat.from(this).notify(1, builder.build());
         }
-
-        if (remoteMessage.getData().size() > 0) {
-            Log.d(TAG, "Данные сообщения: " + remoteMessage.getData());
-            // Обработка данных
-        }
-        // Обработка входящих сообщений
     }
 
     public void sendNotification(String token, String userId, String title, String body) {
