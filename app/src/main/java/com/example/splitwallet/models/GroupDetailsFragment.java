@@ -8,10 +8,12 @@ import android.net.Uri;
 import com.example.splitwallet.utils.DataUtils;
 import com.example.splitwallet.utils.PdfReportGenerator;
 import com.example.splitwallet.ui.ReportViewerActivity;
+
 import java.io.File;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
+
 import static android.content.Context.MODE_PRIVATE;
 
 import static com.example.splitwallet.utils.DataUtils.convertMembersToMap;
@@ -120,7 +122,7 @@ public class GroupDetailsFragment extends Fragment {
                     }
                     String token = task.getResult();
                     Log.d("FCM", "FCM токен: " + token);
-                    sendTokenToServer(getAuthToken(),token, getCurrentUserId());
+                    sendTokenToServer(getAuthToken(), token, getCurrentUserId());
                 });
 
 
@@ -221,6 +223,7 @@ public class GroupDetailsFragment extends Fragment {
 
 
     private AlertDialog settleUpDialog;
+
     private void showSettleUpDialog() {
         String token = getAuthToken();
         if (token == null) return;
@@ -307,7 +310,7 @@ public class GroupDetailsFragment extends Fragment {
         return null;
     }
 
-    private void sendTokenToServer(String authToken, String fcmToken, String userId){
+    private void sendTokenToServer(String authToken, String fcmToken, String userId) {
         ApiService apiService = RetrofitClient.getRetrofitInstance().create(ApiService.class);
         TokenRequest tokenRequest = new TokenRequest(fcmToken);
 

@@ -457,6 +457,7 @@ public class ExpensesFragment extends Fragment {
     }
 
     private void showExpenseSettingsDialog(Long groupId, Long expenseId, Double totalAmount) {
+
         AlertDialog.Builder builder = new AlertDialog.Builder(requireContext());
         View dialogView = LayoutInflater.from(requireContext())
                 .inflate(R.layout.dialog_expense_settings, null);

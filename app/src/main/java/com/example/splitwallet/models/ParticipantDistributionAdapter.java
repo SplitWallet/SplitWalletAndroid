@@ -13,6 +13,7 @@ import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.example.splitwallet.R;
+import com.google.android.material.textfield.TextInputEditText;
 
 import java.util.ArrayList;
 import java.util.Iterator;
@@ -125,7 +126,7 @@ public class ParticipantDistributionAdapter extends RecyclerView.Adapter<Partici
     static class ViewHolder extends RecyclerView.ViewHolder {
         CheckBox include;
         TextView name;
-        EditText amount;
+        TextInputEditText amount;
         TextWatcher textWatcher;
 
         public ViewHolder(View view) {

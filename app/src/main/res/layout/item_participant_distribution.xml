@@ -18,10 +18,16 @@
         android:layout_weight="1"
         android:textSize="16sp"/>
 
-    <EditText
-        android:id="@+id/etAmount"
+
+    <com.google.android.material.textfield.TextInputLayout
         android:layout_width="100dp"
-        android:layout_height="wrap_content"
-        android:inputType="numberDecimal"
-        android:textSize="16sp"/>
+        android:layout_height="wrap_content">
+
+        <com.google.android.material.textfield.TextInputEditText
+            android:id="@+id/etAmount"
+            android:layout_width="100dp"
+            android:layout_height="wrap_content"
+            android:inputType="numberDecimal"
+            android:textSize="16sp"/>
+    </com.google.android.material.textfield.TextInputLayout>
 </LinearLayout>
