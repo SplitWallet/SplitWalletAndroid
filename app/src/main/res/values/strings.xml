@@ -25,4 +25,17 @@
     <string name="invalid_auth">Invalid group or authentication</string>
     <string name="join_group">Join Group</string>
     <string name="create_group">Create Group</string>
+
+    <string name="default_web_client_id">453151780108-05dj3jqu12bsjoppek8mdcortan6jj8f.apps.googleusercontent.com</string>
+
+    <string name="login">Login</string>
+    <string name="email">Email</string>
+    <string name="password">Password</string>
+    <string name="register">Register</string>
+    <string name="back">Back</string>
+
+
+
+
+
 </resources>

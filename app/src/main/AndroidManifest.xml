@@ -71,6 +71,16 @@
             android:name=".ui.GroupPagerActivity"
             android:exported="false"
             android:theme="@style/AppTheme" />
+
+        <activity android:name=".TestActivity"
+            android:exported="false" />
+        <activity android:name=".ParticipantDistributionTestActivity"
+            android:exported="false" />
+
+        <activity
+            android:name="androidx.fragment.app.testing.EmptyFragmentActivity"
+            android:theme="@style/Theme.AppCompat.Light.NoActionBar"
+            android:exported="true" />
     </application>
     <uses-permission android:name="android.permission.CAMERA"
         tools:ignore="ManifestOrder" />
