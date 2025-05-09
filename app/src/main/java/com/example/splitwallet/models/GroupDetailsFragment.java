@@ -331,6 +331,58 @@ public class GroupDetailsFragment extends Fragment {
 
     }
 
+    private Map<String, Double> calculateBalances2() {
+        Map<String, Double> balances = new HashMap<>();
+
+        // Получаем список расходов
+        List<Expense> expenses = expenseViewModel.getExpensesLiveData().getValue();
+        if (expenses == null || expenses.isEmpty()) {
+            return balances;
+        }
+
+        // Получаем список участников
+        List<UserResponse> members = groupViewModel.getGroupMembersLiveData().getValue();
+        if (members == null || members.isEmpty()) {
+            return balances;
+        }
+
+        // Инициализируем балансы для всех участников
+        for (UserResponse member : members) {
+            balances.put(member.getName(), 0.0);
+        }
+
+        // Обрабатываем каждый расход
+        for (Expense expense : expenses) {
+            String paidBy = expense.getUserWhoCreatedId();
+            double amount = expense.getAmount();
+
+            // Находим пользователя, который оплатил расход
+            UserResponse payer = null;
+            for (UserResponse member : members) {
+                if (member.getId().equals(paidBy)) {
+                    payer = member;
+                    break;
+                }
+            }
+
+            if (payer == null) continue;
+
+            // Получаем список участников расхода и их доли
+            List<ExpenseUser> participants = expenseViewModel.getExpenseUsersLiveData().getValue();
+            int memberCount = members.size();
+            double share = amount / memberCount;
+            // Увеличиваем баланс плательщика
+            balances.put(payer.getName(), balances.get(payer.getName()) + share);
+            // Уменьшаем балансы всех участников
+            for (UserResponse member : members) {
+                if (!member.getId().equals(paidBy)) {
+                    balances.put(member.getName(), balances.get(member.getName()) - share);
+                }
+            }
+        }
+
+        return balances;
+    }
 
     private Map<String, Double> calculateBalances() {
         Map<String, Double> balances = new HashMap<>();
@@ -468,8 +520,8 @@ public class GroupDetailsFragment extends Fragment {
                 ExecutorService executor = Executors.newSingleThreadExecutor();
                 executor.execute(() -> {
                     try {
-                        Map<String, Double> balances = calculateBalances();
-
+                        //Map<String, Double> balances = calculateBalances();
+                        Map<String, Double> balances = calculateBalances2();
                         File pdfFile = PdfReportGenerator.generateExpenseReport(
                                 requireContext().getApplicationContext(),
                                 groupName,
