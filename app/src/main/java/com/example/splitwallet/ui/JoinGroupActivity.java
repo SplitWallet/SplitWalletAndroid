@@ -1,7 +1,6 @@
 package com.example.splitwallet.ui;
 
 import android.os.Bundle;
-import android.text.TextUtils;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.Toast;
@@ -10,7 +9,6 @@ import androidx.appcompat.app.AppCompatActivity;
 import com.example.splitwallet.R;
 import com.example.splitwallet.api.ApiService;
 import com.example.splitwallet.api.RetrofitClient;
-import com.example.splitwallet.utils.InviteCodeUtil;
 
 import retrofit2.Call;
 import retrofit2.Callback;
@@ -25,7 +23,7 @@ public class JoinGroupActivity extends AppCompatActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_join_group);
+        setContentView(R.layout.activity_join_group_);
 
         codeInput = findViewById(R.id.code_input);
         joinButton = findViewById(R.id.join_button);
@@ -41,7 +39,7 @@ public class JoinGroupActivity extends AppCompatActivity {
 
         joinButton.setOnClickListener(v -> {
             String code = codeInput.getText().toString();
-            if (code.length() != 6 || TextUtils.isDigitsOnly(code) || code.equals("000000")) {
+            if (code.length() != 6) {
                 Toast.makeText(this, "Попробуйте ввести код ещё раз", Toast.LENGTH_SHORT).show();
                 return;
             }
@@ -51,14 +49,6 @@ public class JoinGroupActivity extends AppCompatActivity {
     }
 
     private void joinGroupByCode(String code, String token) {
-//        Long groupId;
-//        try {
-//            groupId = InviteCodeUtil.decode(code); // декодер
-//        } catch (Exception e) {
-//            Toast.makeText(this, "Неверный формат кода", Toast.LENGTH_SHORT).show();
-//            return;
-//        }
-
         apiService.joinGroup(code, token).enqueue(new Callback<Void>() {
             @Override
             public void onResponse(Call<Void> call, Response<Void> response) {

@@ -3,7 +3,6 @@ package com.example.splitwallet.ui;
 import android.annotation.SuppressLint;
 import android.content.Intent;
 import android.os.Bundle;
-import android.util.Base64;
 import android.view.ViewGroup;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -17,7 +16,6 @@ import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.example.splitwallet.R;
-import com.example.splitwallet.utils.InviteCodeUtil;
 import com.example.splitwallet.viewmodels.GroupViewModel;
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
 
@@ -90,13 +88,13 @@ public class GroupDetailsActivity extends AppCompatActivity {
             startActivity(intent);
         });
 
-        findViewById(R.id.btnInvite).setOnClickListener(v -> {
-            new AlertDialog.Builder(this)
-                    .setTitle("Код приглашения")
-                    .setMessage("Отправьте этот код другу: " + InviteCodeUtil.encode(groupId))
-                    .setPositiveButton("ОК", null)
-                    .show();
-        });
+//        findViewById(R.id.btnInvite).setOnClickListener(v -> {
+//            new AlertDialog.Builder(this)
+//                    .setTitle("Код приглашения")
+//                    .setMessage("Отправьте этот код другу: " + groupId)
+//                    .setPositiveButton("ОК", null)
+//                    .show();
+//        });
 
         findViewById(R.id.btnLeaveGroup).setOnClickListener(v -> {
             new AlertDialog.Builder(this)
