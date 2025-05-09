@@ -2,7 +2,6 @@
 package com.example.splitwallet;
 
 import com.example.splitwallet.models.Group;
-import com.example.splitwallet.ui.GroupExpensesActivity;
 import com.example.splitwallet.ui.GroupDetailsActivity;
 import com.example.splitwallet.ui.GroupPagerActivity;
 import com.example.splitwallet.ui.JoinGroupActivity;
@@ -16,14 +15,12 @@ import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.os.Build;
 import android.os.Bundle;
-import android.os.Handler;
 import android.util.Base64;
 import android.util.Log;
 import android.util.Pair;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
-import android.view.ViewGroup;
 import android.widget.EditText;
 import android.widget.ImageButton;
 import android.widget.ImageView;
@@ -31,11 +28,8 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import com.example.splitwallet.viewmodels.GroupViewModel;
-import com.google.android.material.snackbar.Snackbar;
 import com.google.android.material.navigation.NavigationView;
 
-import androidx.activity.result.ActivityResultLauncher;
-import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
@@ -48,15 +42,7 @@ import androidx.navigation.ui.AppBarConfiguration;
 import androidx.navigation.ui.NavigationUI;
 
 import com.example.splitwallet.databinding.ActivityMainBinding;
-import com.example.splitwallet.models.Group;
-import com.example.splitwallet.ui.GroupDetailsActivity;
-import com.example.splitwallet.ui.GroupPagerActivity;
-import com.example.splitwallet.ui.JoinGroupActivity;
-import com.example.splitwallet.ui.LoginActivity;
-import com.example.splitwallet.viewmodels.GroupViewModel;
-import com.google.android.material.navigation.NavigationView;
 import androidx.drawerlayout.widget.DrawerLayout;
-import androidx.appcompat.app.AppCompatActivity;
 
 import org.json.JSONObject;
 
@@ -107,13 +93,6 @@ public class MainActivity extends AppCompatActivity {
 
 
         setSupportActionBar(binding.appBarMain.toolbar);
-        binding.appBarMain.fab.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                Toast.makeText(view.getContext(), "click", Toast.LENGTH_LONG).show();
-
-            }
-        });
         DrawerLayout drawer = binding.drawerLayout;
         //NavigationView navigationView = binding.navView;
         mAppBarConfiguration = new AppBarConfiguration.Builder(
