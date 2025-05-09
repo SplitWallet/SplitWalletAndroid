@@ -134,13 +134,13 @@ public class MainActivity extends AppCompatActivity {
         });
 
         groupViewModel.groupLiveData.observe(this, group -> {
-                if (group != null) {
-                    Toast.makeText(this, "Group created: " + group.getName(), Toast.LENGTH_SHORT).show();
-                    //addGroupToMenu(group);
-                    loadUserGroups(sharedPreferences.getString("token", null));
-                } else {
-                    Toast.makeText(this, "Failed to create group", Toast.LENGTH_SHORT).show();
-                }
+            if (group != null) {
+                Toast.makeText(this, "Group created: " + group.getName(), Toast.LENGTH_SHORT).show();
+                //addGroupToMenu(group);
+                loadUserGroups(sharedPreferences.getString("token", null));
+            } else {
+                Toast.makeText(this, "Failed to create group", Toast.LENGTH_SHORT).show();
+            }
         });
 
         groupViewModel.getUserGroupsLiveData().observe(this, groups -> {
@@ -229,6 +229,7 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void logout(Context context){
+        LoginActivity.signOutFromGoogle(context);
         SharedPreferences sharedPreferences = context.getSharedPreferences("auth", MODE_PRIVATE);
         sharedPreferences.edit()
                 .remove("token")

@@ -6,7 +6,11 @@ import androidx.lifecycle.LiveData;
 import androidx.lifecycle.MutableLiveData;
 import androidx.lifecycle.ViewModel;
 
+import com.example.splitwallet.api.ApiService;
+import com.example.splitwallet.api.RetrofitClient;
+import com.example.splitwallet.models.Balance;
 import com.example.splitwallet.models.Group;
+import com.example.splitwallet.models.GroupBalancesResponse;
 import com.example.splitwallet.models.JWTtoken;
 import com.example.splitwallet.models.User;
 import com.example.splitwallet.repository.GroupRepository;
@@ -16,6 +20,9 @@ import java.util.ArrayList;
 import java.util.List;
 
 import lombok.Getter;
+import retrofit2.Call;
+import retrofit2.Callback;
+import retrofit2.Response;
 
 public class GroupViewModel extends ViewModel {
     private final GroupRepository groupRepository = new GroupRepository();
@@ -27,7 +34,14 @@ public class GroupViewModel extends ViewModel {
     private final MutableLiveData<String> errorLiveData = new MutableLiveData<>();
     private final MutableLiveData<Boolean> groupDeleted = new MutableLiveData<>();
     private final MutableLiveData<Boolean> leftGroupLiveData = new MutableLiveData<>();
+    private final MutableLiveData<List<Balance>> groupBalancesLiveData = new MutableLiveData<>();
     private MutableLiveData<JWTtoken> tokenLiveData;
+
+    private final MutableLiveData<String> inviteCodeLiveData = new MutableLiveData<>();
+
+    public LiveData<String> getInviteCodeLiveData() {
+        return inviteCodeLiveData;
+    }
 
     @Getter
     private int lastLeaveGroupResponseCode = -1;
@@ -87,11 +101,6 @@ public class GroupViewModel extends ViewModel {
     public void resetDeleteStatus() {
         groupDeleted.setValue(null);
     }
-
-//    public void deleteGroup(Long groupId, String token) {
-//        groupRepository.deleteGroup(groupId, token, groupDeleted);
-//    }
-
     public void deleteGroup(Long groupId, String token) {
         groupRepository.deleteGroup(groupId, token, new GroupRepository.DeleteCallback() {
             @Override
@@ -129,4 +138,42 @@ public class GroupViewModel extends ViewModel {
         }
         tokenLiveData.setValue(token);
     }
+
+    public void fetchGroupInviteCode(Long groupId, String token) {
+        groupRepository.getGroupInviteCode(groupId, token, new GroupRepository.InviteCodeCallback() {
+            @Override
+            public void onSuccess(String inviteCode) {
+                inviteCodeLiveData.postValue(inviteCode);
+            }
+
+            @Override
+            public void onError(String errorMessage) {
+                errorLiveData.postValue(errorMessage);
+            }
+        });
+    }
+
+    public LiveData<List<Balance>> getGroupBalancesLiveData() {
+        return groupBalancesLiveData;
+    }
+
+    public void loadGroupBalances(Long groupId, String token) {
+        ApiService apiService = RetrofitClient.getRetrofitInstance().create(ApiService.class);
+        apiService.getGroupDebts(groupId, "Bearer "+token).enqueue(new Callback<GroupBalancesResponse>() {
+            @Override
+            public void onResponse(Call<GroupBalancesResponse> call, Response<GroupBalancesResponse> response) {
+                if (response.isSuccessful() && response.body() != null) {
+                    groupBalancesLiveData.postValue(response.body().getBalances());
+                } else {
+                    groupBalancesLiveData.postValue(null);
+                }
+            }
+
+            @Override
+            public void onFailure(Call<GroupBalancesResponse> call, Throwable t) {
+                groupBalancesLiveData.postValue(null);
+            }
+        });
+    }
+
 }
