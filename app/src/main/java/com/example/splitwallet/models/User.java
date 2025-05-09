@@ -3,7 +3,9 @@ package com.example.splitwallet.models;
 import com.google.gson.annotations.SerializedName;
 
 import lombok.Getter;
+import lombok.Setter;
 
+@Setter  //Для тестов
 @Getter
 public class User {
     @SerializedName("id")
@@ -20,7 +22,7 @@ public class User {
 
     public User(String id, String username, String email, String phoneNumber) {
         this.id = id;
-        this.username = this.username;
+        this.username = username;
         this.email = email;
         this.phoneNumber = phoneNumber;
     }

@@ -4,8 +4,10 @@ import java.time.LocalDateTime;
 import java.util.List;
 
 import lombok.Getter;
+import lombok.Setter;
 
 @Getter
+@Setter //Для тестов
 public class Group {
     private Long id;
     private String name;
@@ -15,4 +17,5 @@ public class Group {
     private List<User> members;
     private List<Expense> events;
     private boolean isClosed;
+    private String uniqueCode;
 }

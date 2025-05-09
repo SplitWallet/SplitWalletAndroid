@@ -96,7 +96,7 @@ public class CurrencyConverter {
                 });
     }
 
-    private List<ValuteCurs> parseResponse(String xml) throws XmlPullParserException, IOException {
+    public List<ValuteCurs> parseResponse(String xml) throws XmlPullParserException, IOException {
         List<ValuteCurs> valutes = new ArrayList<>();
         XmlPullParserFactory factory = XmlPullParserFactory.newInstance();
         factory.setNamespaceAware(true);
@@ -146,9 +146,9 @@ public class CurrencyConverter {
         return valutes;
     }
 
-    private void processCbrResponse(String xmlResponse, String currencyCode,
-                                    CreateExpenseRequest request,
-                                    ConversionCallback callback) {
+    public void processCbrResponse(String xmlResponse, String currencyCode,
+                                   CreateExpenseRequest request,
+                                   ConversionCallback callback) {
         try {
             List<ValuteCurs> valutes = parseResponse(xmlResponse);
 

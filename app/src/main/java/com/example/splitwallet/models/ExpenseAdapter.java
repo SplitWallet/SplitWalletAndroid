@@ -13,6 +13,7 @@ import androidx.recyclerview.widget.RecyclerView;
 import com.example.splitwallet.databinding.ItemExpenseBinding;
 
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 public class ExpenseAdapter extends ListAdapter<Expense, ExpenseAdapter.ExpenseViewHolder> {
@@ -22,6 +23,12 @@ public class ExpenseAdapter extends ListAdapter<Expense, ExpenseAdapter.ExpenseV
     public interface OnExpenseClickListener {
         void onExpenseClick(Expense expense);
     }
+
+    // Для тестов
+    public void setExpenses(List<Expense> expenses) {
+        submitList(expenses);
+    }
+
 
     public ExpenseAdapter() {
         super(DIFF_CALLBACK);
@@ -44,10 +51,10 @@ public class ExpenseAdapter extends ListAdapter<Expense, ExpenseAdapter.ExpenseV
         holder.bind(getItem(position));
     }
 
-    class ExpenseViewHolder extends RecyclerView.ViewHolder {
-        private final ItemExpenseBinding binding;
+    public class ExpenseViewHolder extends RecyclerView.ViewHolder {
+        public final ItemExpenseBinding binding;
 
-        ExpenseViewHolder(ItemExpenseBinding binding) {
+        public ExpenseViewHolder(ItemExpenseBinding binding) {
             super(binding.getRoot());
             this.binding = binding;
         }
