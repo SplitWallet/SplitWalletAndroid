@@ -198,6 +198,40 @@ public class GroupRepositoryIntegrationTest {
 
     // Тесты для получения участников группы
 
+//    @Test
+//    public void getGroupMembers_shouldUseCorrectEndpoint() throws Exception {
+//        // Arrange
+//        String responseJson = "[{\"id\":\"user1\",\"name\":\"User 1\"}]";
+//        mockWebServer.enqueue(new MockResponse()
+//                .setResponseCode(200)
+//                .setBody(responseJson));
+//
+//        CountDownLatch latch = new CountDownLatch(1);
+//        GroupRepository.MembersCallback callback = new GroupRepository.MembersCallback() {
+//            @Override
+//            public void onSuccess(List<User> members) {
+//                assertEquals(1, members.size());
+//                assertEquals("User 1", members.get(0).getName());
+//                latch.countDown();
+//            }
+//
+//            @Override
+//            public void onError(String error) {
+//                fail("Should not call onError");
+//                latch.countDown();
+//            }
+//        };
+//
+//        // Act
+//        repository.getGroupMembers(1L, "valid_token", callback);
+//
+//        // Assert
+//        assertTrue(latch.await(2, TimeUnit.SECONDS));
+//        RecordedRequest request = mockWebServer.takeRequest();
+//        assertEquals("GET", request.getMethod());
+//        assertEquals("/groups-service/groups/1/members", request.getPath());
+//        assertEquals("Bearer valid_token", request.getHeader("Authorization"));
+//    }
 @Test
 public void getGroupMembers_shouldReturnCorrectUser() throws Exception {
     // 1. Готовим корректный JSON
@@ -257,6 +291,37 @@ public void getGroupMembers_shouldReturnCorrectUser() throws Exception {
         assertTrue(groups.isEmpty());
     }
 
+    // Ошибка 404 при получении участников
+//
+//    @Test
+//    public void getGroupMembers_notFound_shouldCallOnError() throws Exception {
+//        // Arrange
+//        mockWebServer.enqueue(new MockResponse()
+//                .setResponseCode(404)
+//                .setBody("Not Found"));
+//
+//        CountDownLatch latch = new CountDownLatch(1);
+//        GroupRepository.MembersCallback callback = new GroupRepository.MembersCallback() {
+//            @Override
+//            public void onSuccess(List<User> members) {
+//                fail("Should not call onSuccess");
+//                latch.countDown();
+//            }
+//
+//            @Override
+//            public void onError(String error) {
+//                assertTrue(error.contains("404"));
+//                latch.countDown();
+//            }
+//        };
+//
+//        // Act
+//        repository.getGroupMembers(999L, "valid_token", callback);
+//
+//        // Assert
+//        assertTrue(latch.await(2, TimeUnit.SECONDS));
+//    }
+
     // Неверный токен
 
     @Test
@@ -297,5 +362,102 @@ public void getGroupMembers_shouldReturnCorrectUser() throws Exception {
         // Assert
         assertTrue(latch.await(2, TimeUnit.SECONDS));
     }
+
+    // Проверка сортировки групп
+
+//    @Test
+//    public void getUserGroups_shouldSortByUpdatedAtDesc() throws Exception {
+//        // 1. Подготавливаем JSON с двумя группами
+//        String responseJson = "[{" +
+//                "\"id\":1," +
+//                "\"name\":\"Old Group\"," +
+//                "\"uniqueCode\":\"373AA9\"," +
+//                "\"createdAt\":\"2023-01-01T00:00:00\"," +
+//                "\"updatedAt\":\"2023-01-01T00:00:00\"," +
+//                "\"userOwner\":{\"id\":\"uuid-1\",\"username\":null,\"email\":null,\"phoneNumber\":null}," +
+//                "\"isClosed\":false" +
+//                "},{" +
+//                "\"id\":2," +
+//                "\"name\":\"New Group\"," +
+//                "\"uniqueCode\":\"474BB0\"," +
+//                "\"createdAt\":\"2023-01-02T00:00:00\"," +
+//                "\"updatedAt\":\"2023-01-02T00:00:00\"," +
+//                "\"userOwner\":{\"id\":\"uuid-2\",\"username\":null,\"email\":null,\"phoneNumber\":null}," +
+//                "\"isClosed\":false" +
+//                "}]";
+//
+//        // 2. Настраиваем MockWebServer
+//        mockWebServer.enqueue(new MockResponse()
+//                .setResponseCode(200)
+//                .setBody(responseJson)
+//                .addHeader("Content-Type", "application/json")); // важно!
+//
+//        // 3. Создаем LiveData и вызываем метод
+//        MutableLiveData<List<Group>> liveData = new MutableLiveData<>();
+//        repository.getUserGroups("valid_token", liveData);
+//
+//        // 4. Получаем результат с ожиданием
+//        List<Group> groups = getOrAwaitValue(liveData); // должен быть корректно реализован
+//
+//        // 5. Проверки
+//        assertNotNull("Groups list should not be null", groups);
+//        assertEquals("Should contain 2 groups", 2, groups.size());
+//        assertEquals("New Group should be first", "New Group", groups.get(0).getName());
+//        assertEquals("Old Group should be second", "Old Group", groups.get(1).getName());
+//    }
+
+
+//    @Test
+//    public void getUserGroups_shouldSortByUpdatedAtDesc() throws Exception {
+//        // 1. Подготавливаем корректный JSON с двумя группами
+//        String responseJson = "[{" +
+//                "\"id\":1," +
+//                "\"name\":\"Old Group\"," +
+//                "\"uniqueCode\":\"373AA9\"," +
+//                "\"createdAt\":\"2023-01-01T00:00:00\"," +
+//                "\"updatedAt\":\"2023-01-01T00:00:00\"," +
+//                "\"userOwner\":{" +
+//                "\"id\":\"d6db3fad-3e13-421e-b521-48c26e713cd7\"," +
+//                "\"username\":null," +
+//                "\"email\":null," +
+//                "\"phoneNumber\":null" +
+//                "}," +
+//                "\"isClosed\":false" +
+//                "},{" +
+//                "\"id\":2," +
+//                "\"name\":\"New Group\"," +
+//                "\"uniqueCode\":\"474BB0\"," +
+//                "\"createdAt\":\"2023-01-02T00:00:00\"," +
+//                "\"updatedAt\":\"2023-01-02T00:00:00\"," +
+//                "\"userOwner\":{" +
+//                "\"id\":\"e7ec4gbe-4f24-532f-c632-59d37f825ce8\"," +
+//                "\"username\":null," +
+//                "\"email\":null," +
+//                "\"phoneNumber\":null" +
+//                "}," +
+//                "\"isClosed\":false" +
+//                "}]";
+//
+//        // 2. Настраиваем мок-сервер
+//        mockWebServer.enqueue(new MockResponse()
+//                .setResponseCode(200)
+//                .setBody(responseJson));
+//
+//        // 3. Создаем LiveData и вызываем метод
+//        MutableLiveData<List<Group>> liveData = new MutableLiveData<>();
+//        repository.getUserGroups("valid_token", liveData);
+//
+//        // 4. Получаем и проверяем результат
+//        List<Group> groups = getOrAwaitValue(liveData);
+//
+//        // Важные проверки:
+//        assertNotNull("Groups list should not be null", groups);
+//        assertEquals("Should contain 2 groups", 2, groups.size());
+//
+//        // Проверяем сортировку (новые первыми)
+//        assertEquals("New Group should be first", "New Group", groups.get(0).getName());
+//        assertEquals("Old Group should be second", "Old Group", groups.get(1).getName());
+//    }
+
 
 }

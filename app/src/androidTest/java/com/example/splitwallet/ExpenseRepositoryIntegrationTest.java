@@ -63,7 +63,7 @@ public class ExpenseRepositoryIntegrationTest {
         // Создаём Retrofit с этим Gson
         Retrofit retrofit = new Retrofit.Builder()
                 .baseUrl(mockWebServer.url("/"))
-                .addConverterFactory(GsonConverterFactory.create(gson)) // 👈 используем кастомный gson
+                .addConverterFactory(GsonConverterFactory.create(gson))
                 .build();
 
         ApiService apiService = retrofit.create(ApiService.class);
