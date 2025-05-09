@@ -25,9 +25,12 @@ import retrofit2.converter.simplexml.SimpleXmlConverterFactory;
 
 @SuppressLint("NewApi")
 public class RetrofitClient {
-    private static final String BASE_URL = "http://192.168.0.102:8080/";
+    private static String BASE_URL = "http://192.168.0.102:8080/";
     private static Retrofit retrofit = null;
 
+    public static void setBaseUrl(String url) {
+        BASE_URL = url;
+    }
     public static Retrofit getRetrofitInstance() {
         if (retrofit == null) {
             // Создаем интерцептор для логирования
@@ -71,4 +74,28 @@ public class RetrofitClient {
                 .addConverterFactory(ScalarsConverterFactory.create()) // Для работы с сырым XML
                 .build();
     }
+
+    // Для тестов
+    public static void overrideBaseUrl(String newBaseUrl) {
+        HttpLoggingInterceptor loggingInterceptor = new HttpLoggingInterceptor(message ->
+                Log.d("RETROFIT_HTTP", message)
+        );
+        loggingInterceptor.setLevel(HttpLoggingInterceptor.Level.BODY);
+
+        OkHttpClient okHttpClient = new OkHttpClient.Builder()
+                .addInterceptor(loggingInterceptor)
+                .build();
+
+        Gson gson = new GsonBuilder()
+                .registerTypeAdapter(LocalDate.class, new LocalDateAdapter())
+                .registerTypeAdapter(LocalDateTime.class, new LocalDateTimeDeserializer())
+                .create();
+
+        retrofit = new Retrofit.Builder()
+                .baseUrl(newBaseUrl)
+                .client(okHttpClient)
+                .addConverterFactory(GsonConverterFactory.create(gson))
+                .build();
+    }
+
 }

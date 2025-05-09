@@ -1,11 +1,14 @@
 package com.example.splitwallet.api;
 
 
+import com.example.splitwallet.models.Balance;
 import com.example.splitwallet.models.CreateExpenseRequest;
 import com.example.splitwallet.models.CreateGroupRequest;
 import com.example.splitwallet.models.Expense;
 import com.example.splitwallet.models.ExpenseUser;
+import com.example.splitwallet.models.GoogleLoginRequest;
 import com.example.splitwallet.models.Group;
+import com.example.splitwallet.models.GroupBalancesResponse;
 import com.example.splitwallet.models.JWTtoken;
 import com.example.splitwallet.models.LoginRequest;
 import com.example.splitwallet.models.RegisterRequest;
@@ -27,37 +30,40 @@ import retrofit2.http.Path;
 import retrofit2.http.Query;
 
 public interface ApiService {
-    @POST("login")
+    @POST("auth-service/login")
     Call<JWTtoken> login(@Body LoginRequest loginRequest);
 
-    @POST("registration")
+    @POST("auth-service/registration")
     Call<JWTtoken> register(@Body RegisterRequest registerRequest);
 
-    @POST("groups")
+    @POST("auth-service/login/google")
+    Call<JWTtoken> loginWithGoogle(@Body GoogleLoginRequest googleLoginRequest);
+
+    @POST("groups/groups/create")
     Call<Group> createGroup(
             @Header("Authorization") String authToken,
             @Body CreateGroupRequest createGroupRequest
     );
 
-    @POST("groups/{groupId}/expenses")
+    @POST("expenses-service/groups/{groupId}/expenses")
     Call<Expense> createExpense(
             @Path("groupId") Long groupId,
             @Header("Authorization") String authToken,
             @Body CreateExpenseRequest request
     );
 
-    @GET("groups/my")
+    @GET("groups/groups/my")
     Call<List<Group>> getUserGroups(
             @Header("Authorization") String authToken
     );
 
-    @GET("groups/{groupId}/expenses")
+    @GET("expenses-service/groups/{groupId}/expenses")
     Call<List<Expense>> getGroupExpenses(
             @Path("groupId") Long groupId,
             @Header("Authorization") String authToken
     );
 
-    @PUT("groups/{groupId}/expenses/{expenseId}")
+    @PUT("expenses-service/groups/{groupId}/expenses/{expenseId}")
     Call<Expense> updateExpense(
             @Path("groupId") Long groupId,
             @Path("expenseId") Long expenseId,
@@ -65,33 +71,39 @@ public interface ApiService {
             @Body UpdateExpenseRequest request
     );
 
-    @DELETE("groups/{groupId}/expenses/{expenseId}")
+    @DELETE("expenses-service/groups/{groupId}/expenses/{expenseId}")
     Call<Void> deleteExpense(
             @Path("groupId") Long groupId,
             @Path("expenseId") Long expenseId,
             @Header("Authorization") String authToken
     );
 
-    @GET("groups/{groupId}/members")
+    @GET("groups/groups/{groupId}")
+    Call<Group> getGroupById(
+            @Path("groupId") Long groupId,
+            @Header("Authorization") String authToken
+    );
+
+    @GET("groups/groups/{groupId}/members")
     Call<List<User>> getGroupMembers(
             @Path("groupId") Long groupId,
             @Header("Authorization") String authToken
     );
 
-    @POST("/groups/{uniqueCode}/join")
+    @POST("groups/groups/{uniqueCode}/join")
     Call<Void> joinGroup(
             @Path("uniqueCode") String uniqueCode,
             @Header("Authorization") String authToken
     );
 
-    @GET("groups/{groupId}/expenses/{expenseId}/users")
+    @GET("expensesuser-service/groups/{groupId}/expenses/{expenseId}")
     Call<List<ExpenseUser>> getExpenseUsers(
             @Path("groupId") Long groupId,
             @Path("expenseId") Long expenseId,
             @Header("Authorization") String authToken
     );
 
-    @PUT("groups/{groupId}/expenses/{expenseId}/users")
+    @PUT("expensesuser-service/groups/{groupId}/expenses/{expenseId}/users")
     Call<List<ExpenseUser>> updateExpenseUsers(
             @Path("groupId") Long groupId,
             @Path("expenseId") Long expenseId,
@@ -99,7 +111,7 @@ public interface ApiService {
             @Body List<ExpenseUser> expenseUsers
     );
 
-    @DELETE("groups/{groupId}/expenses/{expenseId}/users/{userId}")
+    @DELETE("expensesuser-service/groups/{groupId}/expenses/{expenseId}/users/{userId}")
     Call<Void> removeUserFromExpense(
             @Path("groupId") Long groupId,
             @Path("expenseId") Long expenseId,
@@ -107,13 +119,18 @@ public interface ApiService {
             @Header("Authorization") String authToken
     );
 
-    @DELETE("groups/{id}")
+    @GET("expensesuser-service/group/{groupId}/debts")
+    Call<GroupBalancesResponse> getGroupDebts(
+            @Path("groupId") Long groupId,
+            @Header("Authorization") String authToken
+    );
+    @DELETE("groups/groups/{id}")
     Call<Void> deleteGroup(
             @Header("Authorization") String token,
             @Path("id") Long groupId
     );
 
-    @DELETE("groups/{groupId}/members/{userId}")
+    @DELETE("groups/groups/{groupId}/members/{userId}")
     Call<Void> leaveGroup(
             @Path("groupId") Long groupId,
             @Path("userId") String userId,
