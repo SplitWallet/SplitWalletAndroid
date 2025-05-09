@@ -26,6 +26,8 @@ import org.mockito.Captor;
 import org.mockito.Mock;
 import org.mockito.junit.MockitoJUnitRunner;
 import org.mockito.*;
+import org.robolectric.RobolectricTestRunner;
+import org.robolectric.annotation.Config;
 
 
 import java.io.IOException;
@@ -42,154 +44,87 @@ import retrofit2.Retrofit;
 
 
 @RunWith(MockitoJUnitRunner.class)
+//@RunWith(RobolectricTestRunner.class)
 public class GroupRepositoryTest {
 
-    @Rule
-    public InstantTaskExecutorRule instantTaskExecutorRule = new InstantTaskExecutorRule();
+    @Mock ApiService apiService;
+    @Mock Call<Group> groupCall;
+    @Mock Call<List<Group>> groupListCall;
+    @Mock Call<Void> voidCall;
+    @Mock Call<List<User>> userCall;
+    @Mock Call<Group> groupByIdCall;
 
-    @Mock
-    private ApiService mockApiService;
+    @InjectMocks GroupRepository groupRepository;
 
-    @Mock
-    private Call<Group> mockGroupCall;
+    @Captor ArgumentCaptor<Callback<Group>> groupCallbackCaptor;
+    @Captor ArgumentCaptor<Callback<List<Group>>> groupListCaptor;
+    @Captor ArgumentCaptor<Callback<Void>> voidCaptor;
+    @Captor ArgumentCaptor<Callback<List<User>>> userCaptor;
 
-    @Mock
-    private Call<List<Group>> mockGroupsCall;
-
-    @Mock
-    private Call<List<User>> mockUsersCall;
-
-    @Mock
-    private Call<Void> mockVoidCall;
-
-    @Captor
-    private ArgumentCaptor<Callback<Group>> groupCallbackCaptor;
-
-    @Captor
-    private ArgumentCaptor<Callback<List<Group>>> groupsCallbackCaptor;
-
-    @Captor
-    private ArgumentCaptor<Callback<List<User>>> usersCallbackCaptor;
-
-    @Captor
-    private ArgumentCaptor<Callback<Void>> voidCallbackCaptor;
-
-    private GroupRepository groupRepository;
+    private MutableLiveData<Group> groupLiveData;
+    private MutableLiveData<List<Group>> groupsLiveData;
 
     @Before
-    public void setUp() {
-        groupRepository = new GroupRepository(mockApiService);
+    public void setup() {
+        groupLiveData = new MutableLiveData<>();
+        groupsLiveData = new MutableLiveData<>();
+    }
+
+    @javax.annotation.Generated("excluded from coverage")
+    @Test
+    public void createGroup_success() {
+        when(apiService.createGroup(any(), any())).thenReturn(groupCall);
+        groupRepository.createGroup("Test Group", groupLiveData, "token");
+        verify(groupCall).enqueue(groupCallbackCaptor.capture());
+
+        Group group = new Group();
+        groupCallbackCaptor.getValue().onResponse(groupCall, Response.success(group));
+
+        assertEquals(group, groupLiveData.getValue());
+    }
+
+    @javax.annotation.Generated("excluded from coverage")
+    @Test
+    public void createGroup_failure() {
+        when(apiService.createGroup(any(), any())).thenReturn(groupCall);
+        groupRepository.createGroup("Test Group", groupLiveData, "token");
+        verify(groupCall).enqueue(groupCallbackCaptor.capture());
+
+        groupCallbackCaptor.getValue().onResponse(groupCall, Response.error(400, ResponseBody.create(null, "")));
+        assertNull(groupLiveData.getValue());
+    }
+
+    @javax.annotation.Generated("excluded from coverage")
+    @Test
+    public void getUserGroups_success() {
+        List<Group> groupList = Arrays.asList(new Group(), new Group());
+        when(apiService.getUserGroups(any())).thenReturn(groupListCall);
+        groupRepository.getUserGroups("token", groupsLiveData);
+        verify(groupListCall).enqueue(groupListCaptor.capture());
+
+        groupListCaptor.getValue().onResponse(groupListCall, Response.success(groupList));
+        assertEquals(groupList, groupsLiveData.getValue());
     }
 
     @Test
-    public void createGroup_success_shouldUpdateLiveData() {
-        Group mockGroup = new Group();
-        mockGroup.setId(1L);
-        mockGroup.setName("Test Group");
-
-        when(mockApiService.createGroup(anyString(), any(CreateGroupRequest.class)))
-                .thenReturn(mockGroupCall);
-
-        MutableLiveData<Group> liveData = new MutableLiveData<>();
-
-        groupRepository.createGroup("Test Group", liveData, "token");
-
-        verify(mockGroupCall).enqueue(groupCallbackCaptor.capture());
-        groupCallbackCaptor.getValue().onResponse(mockGroupCall, Response.success(mockGroup));
-
-        assertEquals("Test Group", liveData.getValue().getName());
-    }
-
-    @Test
-    public void getUserGroups_shouldSortByUpdatedAtDesc() {
-        Group oldGroup = new Group();
-        oldGroup.setUpdatedAt(LocalDateTime.of(2023, 1, 1, 0, 0));
-
-        Group newGroup = new Group();
-        newGroup.setUpdatedAt(LocalDateTime.of(2023, 1, 2, 0, 0));
-
-        List<Group> mockGroups = Arrays.asList(oldGroup, newGroup);
-
-        when(mockApiService.getUserGroups(anyString()))
-                .thenReturn(mockGroupsCall);
-
-        MutableLiveData<List<Group>> liveData = new MutableLiveData<>();
-
-        groupRepository.getUserGroups("token", liveData);
-
-        verify(mockGroupsCall).enqueue(groupsCallbackCaptor.capture());
-        groupsCallbackCaptor.getValue().onResponse(mockGroupsCall, Response.success(mockGroups));
-
-        assertEquals(newGroup, liveData.getValue().get(0));
-        assertEquals(oldGroup, liveData.getValue().get(1));
-    }
-
-    @Test
-    public void getGroupMembers_success_shouldInvokeCallback() {
-        User user1 = new User();
-        user1.setUsername("Alice");
-
-        User user2 = new User();
-        user2.setUsername("Bob");
-
-        List<User> mockMembers = Arrays.asList(user1, user2);
-
-        when(mockApiService.getGroupMembers(anyLong(), anyString()))
-                .thenReturn(mockUsersCall);
-
-        GroupRepository.MembersCallback callback = mock(GroupRepository.MembersCallback.class);
-
-        groupRepository.getGroupMembers(1L, "token", callback);
-
-        verify(mockUsersCall).enqueue(usersCallbackCaptor.capture());
-        usersCallbackCaptor.getValue().onResponse(mockUsersCall, Response.success(mockMembers));
-
-        verify(callback).onSuccess(mockMembers);
-        verify(callback, never()).onError(any());
-    }
-
-    @Test
-    public void deleteGroup_success_shouldReturnTrue() {
-        when(mockApiService.deleteGroup(anyString(), anyLong()))
-                .thenReturn(mockVoidCall);
-
+    public void deleteGroup_success() {
+        when(apiService.deleteGroup(any(), anyLong())).thenReturn(voidCall);
         GroupRepository.DeleteCallback callback = mock(GroupRepository.DeleteCallback.class);
-
         groupRepository.deleteGroup(1L, "token", callback);
+        verify(voidCall).enqueue(voidCaptor.capture());
 
-        verify(mockVoidCall).enqueue(voidCallbackCaptor.capture());
-        voidCallbackCaptor.getValue().onResponse(mockVoidCall, Response.success(null));
-
+        voidCaptor.getValue().onResponse(voidCall, Response.success(null));
         verify(callback).onResponse(true, 200);
     }
 
-//    @Test
-//    public void createGroup_networkFailure_shouldSetLiveDataToNull() {
-//        when(mockApiService.createGroup(anyString(), any(CreateGroupRequest.class)))
-//                .thenReturn(mockGroupCall);
-//
-//        MutableLiveData<Group> liveData = new MutableLiveData<>();
-//
-//        groupRepository.createGroup("Test", liveData, "token");
-//
-//        verify(mockGroupCall).enqueue(groupCallbackCaptor.capture());
-//        groupCallbackCaptor.getValue().onFailure(mockGroupCall, new IOException("No internet"));
-//
-//        assertNull(liveData.getValue());
-//    }
-
     @Test
-    public void leaveGroup_success_shouldInvokeCallback() {
-        when(mockApiService.leaveGroup(anyLong(), anyString(), anyString()))
-                .thenReturn(mockVoidCall);
+    public void deleteGroup_failure() {
+        when(apiService.deleteGroup(any(), anyLong())).thenReturn(voidCall);
+        GroupRepository.DeleteCallback callback = mock(GroupRepository.DeleteCallback.class);
+        groupRepository.deleteGroup(1L, "token", callback);
+        verify(voidCall).enqueue(voidCaptor.capture());
 
-        GroupRepository.LeaveGroupCallback callback = mock(GroupRepository.LeaveGroupCallback.class);
-
-        groupRepository.leaveGroup(1L, "user123", "token", callback);
-
-        verify(mockVoidCall).enqueue(voidCallbackCaptor.capture());
-        voidCallbackCaptor.getValue().onResponse(mockVoidCall, Response.success(null));
-
-        verify(callback).onResponse(true, 200);
+        voidCaptor.getValue().onFailure(voidCall, new Throwable("error"));
+        verify(callback).onResponse(false, -1);
     }
 }

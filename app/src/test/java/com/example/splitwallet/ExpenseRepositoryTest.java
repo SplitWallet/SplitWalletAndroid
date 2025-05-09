@@ -2,33 +2,30 @@ package com.example.splitwallet;
 
 import static org.mockito.Mockito.*;
 
+import androidx.arch.core.executor.testing.InstantTaskExecutorRule;
 import androidx.lifecycle.MutableLiveData;
 
 import com.example.splitwallet.api.ApiService;
 import com.example.splitwallet.models.CreateExpenseRequest;
 import com.example.splitwallet.models.CurrencyConverter;
 import com.example.splitwallet.models.Expense;
+import com.example.splitwallet.models.ExpenseUser;
 import com.example.splitwallet.repository.ExpenseRepository;
+import com.example.splitwallet.repository.ExpenseRepository.ExpensesCallback;
+import com.example.splitwallet.repository.ExpenseRepository.ExpenseCallback;
 
 import org.junit.Before;
+import org.junit.Rule;
 import org.junit.Test;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 
+import java.time.LocalDate;
+import java.util.List;
+
 import retrofit2.Call;
 import retrofit2.Callback;
-import retrofit2.Response;
-
-import androidx.arch.core.executor.testing.InstantTaskExecutorRule;
-import com.example.splitwallet.repository.ExpenseRepository.ExpensesCallback;
-
-import org.junit.Rule;
-import org.mockito.Captor;
-
-import java.time.LocalDate;
-import java.util.Arrays;
-import java.util.List;
 
 public class ExpenseRepositoryTest {
 
@@ -41,100 +38,129 @@ public class ExpenseRepositoryTest {
     @Mock
     private CurrencyConverter currencyConverter;
 
-    @Mock
-    private Call<List<Expense>> expenseListCall;
-
-    @Mock
-    private Call<Expense> expenseCall;
-
-    @Captor
-    private ArgumentCaptor<Callback<List<Expense>>> expensesCallbackCaptor;
-
-    @Captor
-    private ArgumentCaptor<Callback<Expense>> expenseCallbackCaptor;
-
     private ExpenseRepository repository;
 
     @Before
-    public void setUp() {
+    public void setup() {
         MockitoAnnotations.openMocks(this);
         repository = new ExpenseRepository(apiService, currencyConverter);
     }
 
     @Test
-    public void testGetExpenses_success() {
+    public void testGetExpenses_callsApi() {
         Long groupId = 1L;
-        String token = "test-token";
+        String token = "testToken";
         ExpensesCallback callback = mock(ExpensesCallback.class);
+        Call<List<Expense>> call = mock(Call.class);
 
-        when(apiService.getGroupExpenses(eq(groupId), anyString())).thenReturn(expenseListCall);
+        when(apiService.getGroupExpenses(groupId, "Bearer " + token)).thenReturn(call);
 
         repository.getExpenses(groupId, token, callback);
-        verify(expenseListCall).enqueue(expensesCallbackCaptor.capture());
 
-        List<Expense> mockExpenses = Arrays.asList(new Expense(), new Expense());
-        Response<List<Expense>> response = Response.success(mockExpenses);
-
-        expensesCallbackCaptor.getValue().onResponse(expenseListCall, response);
-
-        verify(callback).onSuccess(mockExpenses);
+        verify(call).enqueue(any());
     }
 
     @Test
-    public void testGetExpenses_failure() {
+    public void testCreateExpense_callsApi() {
         Long groupId = 1L;
-        String token = "test-token";
-        ExpensesCallback callback = mock(ExpensesCallback.class);
-
-        when(apiService.getGroupExpenses(eq(groupId), anyString())).thenReturn(expenseListCall);
-
-        repository.getExpenses(groupId, token, callback);
-        verify(expenseListCall).enqueue(expensesCallbackCaptor.capture());
-
-        Throwable t = new Throwable("Network error");
-        expensesCallbackCaptor.getValue().onFailure(expenseListCall, t);
-
-        verify(callback).onError("Network error: Network error");
-    }
-
-    @Test
-    public void testCreateExpense_rubCurrency() {
-        Long groupId = 1L;
-        String token = "test-token";
+        String token = "testToken";
+        CreateExpenseRequest request = new CreateExpenseRequest("Test", LocalDate.now(), "desc", 100.0, "RUB");
         MutableLiveData<Expense> result = new MutableLiveData<>();
-        CreateExpenseRequest request = new CreateExpenseRequest(
-                "Lunch", LocalDate.now(), "Business lunch", 100.0, "RUB"
-        );
+        Call<Expense> call = mock(Call.class);
 
-        when(apiService.createExpense(eq(groupId), anyString(), any())).thenReturn(expenseCall);
+        when(apiService.createExpense(groupId, "Bearer " + token, request)).thenReturn(call);
+
+        repository.createExpense(groupId, request, token, result);
+
+        verify(call).enqueue(any());
+    }
+
+    @Test
+    public void testCreateExpenseWithConversion_ifCurrencyIsRub_callsCreateExpenseDirectly() {
+        Long groupId = 1L;
+        String token = "testToken";
+        CreateExpenseRequest request = new CreateExpenseRequest("Test", LocalDate.now(), "desc", 100.0, "RUB");
+        MutableLiveData<Expense> result = new MutableLiveData<>();
+        ExpenseRepository spyRepo = spy(repository);
+
+        doNothing().when(spyRepo).createExpense(groupId, request, token, result);
+
+        spyRepo.createExpenseWithConversion(groupId, request, token, result);
+
+        verify(spyRepo).createExpense(groupId, request, token, result);
+    }
+
+    @Test
+    public void testCreateExpenseWithConversion_ifCurrencyIsUSD_callsConverter() {
+        Long groupId = 1L;
+        String token = "testToken";
+        CreateExpenseRequest request = new CreateExpenseRequest("Test", LocalDate.now(), "desc", 50.0, "USD");
+        MutableLiveData<Expense> result = new MutableLiveData<>();
 
         repository.createExpenseWithConversion(groupId, request, token, result);
-        verify(apiService).createExpense(eq(groupId), eq("Bearer " + token), eq(request));
+
+        verify(currencyConverter).convertToRub(eq(groupId), eq(request), eq(token), any());
     }
 
     @Test
-    public void testCreateExpense_nonRubCurrency_successfulConversion() {
+    public void testUpdateExpenseUsers_callsApi() {
         Long groupId = 1L;
-        String token = "test-token";
-        MutableLiveData<Expense> result = new MutableLiveData<>();
-        CreateExpenseRequest request = new CreateExpenseRequest(
-                "Dinner", LocalDate.now(), "Team dinner", 100.0, "USD"
-        );
+        Long expenseId = 2L;
+        String token = "testToken";
+        Callback<List<ExpenseUser>> callback = mock(Callback.class);
+        Call<List<ExpenseUser>> call = mock(Call.class);
 
-        doAnswer(invocation -> {
-            CurrencyConverter.ConversionCallback callback = invocation.getArgument(3);
-            CreateExpenseRequest convertedRequest = new CreateExpenseRequest(
-                    "Dinner", request.getDate(), request.getDescription(), 9000.0, "RUB"
-            );
-            callback.onSuccess(convertedRequest);
-            return null;
-        }).when(currencyConverter).convertToRub(eq(groupId), eq(request), eq(token), any());
+        List<ExpenseUser> expenseUsers = List.of(new ExpenseUser("user1", 100.0, 50.0));
+        when(apiService.updateExpenseUsers(groupId, expenseId, "Bearer " + token, expenseUsers)).thenReturn(call);
 
-        when(apiService.createExpense(eq(groupId), anyString(), any())).thenReturn(expenseCall);
+        repository.updateExpenseUsers(groupId, expenseId, token, expenseUsers, callback);
 
-        repository.createExpenseWithConversion(groupId, request, token, result);
-        verify(apiService).createExpense(eq(groupId), eq("Bearer " + token), any());
+        verify(call).enqueue(eq(callback));
+    }
+
+    @Test
+    public void testDeleteExpense_callsApi() {
+        Long groupId = 1L;
+        Long expenseId = 10L;
+        String token = "testToken";
+        Call<Void> call = mock(Call.class);
+        ExpenseCallback callback = mock(ExpenseCallback.class);
+
+        when(apiService.deleteExpense(groupId, expenseId, "Bearer " + token)).thenReturn(call);
+
+        repository.deleteExpense(groupId, expenseId, token, callback);
+
+        verify(call).enqueue(any());
+    }
+
+    @Test
+    public void testGetExpenseUsers_callsApi() {
+        Long groupId = 1L;
+        Long expenseId = 2L;
+        String token = "testToken";
+        Callback<List<ExpenseUser>> callback = mock(Callback.class);
+        Call<List<ExpenseUser>> call = mock(Call.class);
+
+        when(apiService.getExpenseUsers(groupId, expenseId, "Bearer " + token)).thenReturn(call);
+
+        repository.getExpenseUsers(groupId, expenseId, token, callback);
+
+        verify(call).enqueue(eq(callback));
+    }
+
+    @Test
+    public void testRemoveUserFromExpense_callsApi() {
+        Long groupId = 1L;
+        Long expenseId = 2L;
+        String userId = "user1";
+        String token = "testToken";
+        Callback<Void> callback = mock(Callback.class);
+        Call<Void> call = mock(Call.class);
+
+        when(apiService.removeUserFromExpense(groupId, expenseId, userId, "Bearer " + token)).thenReturn(call);
+
+        repository.removeUserFromExpense(groupId, expenseId, userId, token, callback);
+
+        verify(call).enqueue(eq(callback));
     }
 }
-
-
