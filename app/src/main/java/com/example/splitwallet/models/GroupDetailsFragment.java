@@ -20,6 +20,7 @@ import static com.example.splitwallet.utils.DataUtils.convertMembersToMap;
 
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
@@ -56,6 +57,8 @@ import java.util.List;
 import java.util.Objects;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.atomic.AtomicInteger;
+import java.util.function.Consumer;
 
 import retrofit2.Call;
 import retrofit2.Callback;
@@ -347,121 +350,85 @@ public class GroupDetailsFragment extends Fragment {
         }
 
         // Инициализируем балансы для всех участников
+        int index = 0;
         for (UserResponse member : members) {
             balances.put(member.getName(), 0.0);
-        }
-
-        // Обрабатываем каждый расход
-        for (Expense expense : expenses) {
-            String paidBy = expense.getUserWhoCreatedId();
-            double amount = expense.getAmount();
-
-            // Находим пользователя, который оплатил расход
-            UserResponse payer = null;
-            for (UserResponse member : members) {
-                if (member.getId().equals(paidBy)) {
-                    payer = member;
-                    break;
+            groupViewModel.loadGroupBalances(groupId, getAuthToken());
+            List<Balance> allBalances = groupViewModel.getGroupBalancesLiveData().getValue();
+            for(Balance balance : allBalances){
+                Log.d("DEBUG", String.valueOf(balance.getNetBalance())+" "+balance.getUsername());
+                if(Objects.equals(balance.getUsername(), member.getName())){
+                    balances.put(member.getUsername(), balance.getNetBalance());
                 }
             }
-
-            if (payer == null) continue;
-
-            // Получаем список участников расхода и их доли
-            List<ExpenseUser> participants = expenseViewModel.getExpenseUsersLiveData().getValue();
-            int memberCount = members.size();
-            double share = amount / memberCount;
-            // Увеличиваем баланс плательщика
-            balances.put(payer.getName(), balances.get(payer.getName()) + share);
-            // Уменьшаем балансы всех участников
-            for (UserResponse member : members) {
-                if (!member.getId().equals(paidBy)) {
-                    balances.put(member.getName(), balances.get(member.getName()) - share);
-                }
-            }
+            index += 1;
         }
 
         return balances;
     }
-
-    private Map<String, Double> calculateBalances() {
+    private void calculateBalances(ExpenseViewModel viewModel, Long groupId,
+                                   List<Expense> expenses, List<UserResponse> members,
+                                   Consumer<Map<String, Double>> callback) {
         Map<String, Double> balances = new HashMap<>();
 
-        // Получаем список расходов
-        List<Expense> expenses = expenseViewModel.getExpensesLiveData().getValue();
-        if (expenses == null || expenses.isEmpty()) {
-            return balances;
-        }
-
-        // Получаем список участников
-        List<UserResponse> members = groupViewModel.getGroupMembersLiveData().getValue();
-        if (members == null || members.isEmpty()) {
-            return balances;
-        }
-
-        // Инициализируем балансы для всех участников
+        // Инициализация балансов
         for (UserResponse member : members) {
             balances.put(member.getName(), 0.0);
         }
 
-        // Обрабатываем каждый расход
+        // Счетчик для отслеживания завершения загрузки
+        AtomicInteger counter = new AtomicInteger(expenses.size());
+
         for (Expense expense : expenses) {
-            String paidBy = expense.getUserWhoCreatedId();
-            double amount = expense.getAmount();
+            // Загружаем участников для каждого расхода
+            viewModel.loadExpenseUsers(groupId, expense.getId(), getAuthToken());
 
-            // Находим пользователя, который оплатил расход
-            UserResponse payer = null;
-            for (UserResponse member : members) {
-                if (member.getId().equals(paidBy)) {
-                    payer = member;
-                    break;
-                }
-            }
+            viewModel.getExpenseUsersLiveData().observe(getViewLifecycleOwner(), participants -> {
+                if (participants != null) {
+                    String paidBy = expense.getUserWhoCreatedId();
+                    double amount = expense.getAmount();
 
-            if (payer == null) continue;
+                    // Находим плательщика
+                    UserResponse payer = members.stream()
+                            .filter(m -> m.getId().equals(paidBy))
+                            .findFirst()
+                            .orElse(null);
 
-            // Получаем список участников расхода и их доли
-            List<ExpenseUser> participants = expenseViewModel.getExpenseUsersLiveData().getValue();
-            if (participants == null || participants.isEmpty()) {
-                // Если нет информации о распределении, считаем что делится поровну на всех
-                int memberCount = members.size();
-                double share = amount / memberCount;
-
-                // Увеличиваем баланс плательщика
-                balances.put(payer.getName(), balances.get(payer.getName()) + amount);
-
-                // Уменьшаем балансы всех участников
-                for (UserResponse member : members) {
-                    if (!member.getId().equals(paidBy)) {
-                        balances.put(member.getName(), balances.get(member.getName()) - share);
-                    }
-                }
-            } else {
-                // Если есть информация о распределении, используем ее
-                for (ExpenseUser participant : participants) {
-                    UserResponse user = null;
-                    for (UserResponse member : members) {
-                        if (member.getId().equals(participant.getUserId())) {
-                            user = member;
-                            break;
-                        }
-                    }
-
-                    if (user != null) {
-                        double share = participant.getAmount();
-                        if (user.getId().equals(paidBy)) {
-                            // Плательщик получает всю сумму
-                            balances.put(user.getName(), balances.get(user.getName()) + amount);
+                    if (payer != null) {
+                        if (participants.isEmpty()) {
+                            // Деление поровну
+                            double share = amount / members.size();
+                            balances.put(payer.getName(), balances.get(payer.getName()) + amount);
+                            members.stream()
+                                    .filter(m -> !m.getId().equals(paidBy))
+                                    .forEach(m -> balances.put(m.getName(), balances.get(m.getName()) - share));
                         } else {
-                            // Участник платит свою долю
-                            balances.put(user.getName(), balances.get(user.getName()) - share);
+                            // Используем распределение из participants
+                            for (ExpenseUser participant : participants) {
+                                UserResponse user = members.stream()
+                                        .filter(m -> m.getId().equals(participant.getUserId()))
+                                        .findFirst()
+                                        .orElse(null);
+
+                                if (user != null) {
+                                    double share = participant.getAmount();
+                                    if (user.getId().equals(paidBy)) {
+                                        balances.put(user.getName(), balances.get(user.getName()) + share);
+                                    } else {
+                                        balances.put(user.getName(), balances.get(user.getName()) - share);
+                                    }
+                                }
+                            }
                         }
                     }
                 }
-            }
-        }
 
-        return balances;
+                // Проверяем завершение
+                if (counter.decrementAndGet() == 0) {
+                    callback.accept(balances);
+                }
+            });
+        }
     }
 
     private void showReportOptions() {
@@ -502,12 +469,10 @@ public class GroupDetailsFragment extends Fragment {
         progressDialog.setCancelable(false);
         progressDialog.show();
 
-        // 1. Сначала загружаем данные в UI потоке
         String token = getAuthToken();
         expenseViewModel.loadExpenses(groupId, token);
         groupViewModel.loadGroupMembers(groupId, token);
 
-        // 2. Подписываемся на LiveData в UI потоке
         expenseViewModel.getExpensesLiveData().observe(getViewLifecycleOwner(), expenses -> {
             groupViewModel.getGroupMembersLiveData().observe(getViewLifecycleOwner(), members -> {
                 if (expenses == null || members == null) {
@@ -516,53 +481,62 @@ public class GroupDetailsFragment extends Fragment {
                     return;
                 }
 
-                // 3. Запускаем генерацию PDF в фоновом потоке
-                ExecutorService executor = Executors.newSingleThreadExecutor();
-                executor.execute(() -> {
-                    try {
-                        //Map<String, Double> balances = calculateBalances();
-                        Map<String, Double> balances = calculateBalances2();
-                        File pdfFile = PdfReportGenerator.generateExpenseReport(
-                                requireContext().getApplicationContext(),
-                                groupName,
-                                expenses,
-                                convertMembersToMap(members),
-                                balances
-                        );
+                // Загружаем данные о распределении и рассчитываем балансы
+                calculateBalances(expenseViewModel, groupId, expenses, members, balances -> {
+                    // Генерация PDF в фоне
+                    ExecutorService executor = Executors.newSingleThreadExecutor();
+                    executor.execute(() -> {
+                        try {
+                            File pdfFile = PdfReportGenerator.generateExpenseReport(
+                                    requireContext().getApplicationContext(),
+                                    groupName,
+                                    expenses,
+                                    convertMembersToMap(members),
+                                    balances
+                            );
 
-                        requireActivity().runOnUiThread(() -> {
-                            progressDialog.dismiss();
-                            if (pdfFile != null && pdfFile.exists()) {
-                                Uri uri = FileProvider.getUriForFile(
-                                        requireContext(),
-                                        "com.example.splitwallet.fileprovider",
-                                        pdfFile
-                                );
+                            requireActivity().runOnUiThread(() -> {
+                                progressDialog.dismiss();
+                                if (pdfFile != null && pdfFile.exists()) {
+                                    requireActivity().runOnUiThread(() -> {
+                                        progressDialog.dismiss();
+                                        if (pdfFile != null && pdfFile.exists()) {
+                                            Uri uri = FileProvider.getUriForFile(
+                                                    requireContext(),
+                                                    "com.example.splitwallet.fileprovider",
+                                                    pdfFile
+                                            );
 
-                                Intent intent = new Intent(Intent.ACTION_VIEW);
-                                intent.setDataAndType(uri, "application/pdf");
-                                intent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
-                                intent.addFlags(Intent.FLAG_ACTIVITY_NO_HISTORY);
+                                            Intent intent = new Intent(Intent.ACTION_VIEW);
+                                            intent.setDataAndType(uri, "application/pdf");
+                                            intent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
+                                            intent.addFlags(Intent.FLAG_ACTIVITY_NO_HISTORY);
 
-                                // Проверяем наличие приложения для просмотра PDF
-                                PackageManager pm = requireContext().getPackageManager();
-                                if (intent.resolveActivity(pm) != null) {
-                                    startActivity(intent);
+                                            // Проверяем наличие приложения для просмотра PDF
+                                            PackageManager pm = requireContext().getPackageManager();
+                                            if (intent.resolveActivity(pm) != null) {
+                                                startActivity(intent);
+                                            } else {
+                                                Toast.makeText(getContext(), "No PDF viewer installed", Toast.LENGTH_SHORT).show();
+                                            }
+                                            startActivity(intent);
+                                        } else {
+                                            Toast.makeText(getContext(), "Report generation failed", Toast.LENGTH_SHORT).show();
+                                        }
+                                    });
                                 } else {
-                                    Toast.makeText(getContext(), "No PDF viewer installed", Toast.LENGTH_SHORT).show();
+                                    Toast.makeText(getContext(), "Report generation failed", Toast.LENGTH_SHORT).show();
                                 }
-                                startActivity(intent);
-                            } else {
-                                Toast.makeText(getContext(), "Report generation failed", Toast.LENGTH_SHORT).show();
-                            }
-                        });
-                    } catch (Exception e) {
-                        requireActivity().runOnUiThread(() -> {
-                            progressDialog.dismiss();
-                            Toast.makeText(getContext(), "Error: " + e.getMessage(), Toast.LENGTH_LONG).show();
-                            Log.e("ReportError", e.getMessage(), e);
-                        });
-                    }
+                            });
+                        } catch (Exception e) {
+                            requireActivity().runOnUiThread(() -> {
+                                progressDialog.dismiss();
+                                Toast.makeText(getContext(), "Error: " + e.getMessage(), Toast.LENGTH_LONG).show();
+                            });
+                        } finally {
+                            executor.shutdown();
+                        }
+                    });
                 });
             });
         });
